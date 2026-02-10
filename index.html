@@ -17,8 +17,49 @@
     <p class="muted">Lade Inhalte…</p>
   </main>
 
-  <!-- App-Start -->
-  <script type="module" src="src/app.js"></script>
+  <!-- App-Start + Debug (zeigt Fehler im #view) -->
+  <script type="module">
+    const view = document.getElementById("view");
+
+    async function check(url) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        return `${url}: ${res.status} ${res.ok ? "OK" : "FEHLER"}`;
+      } catch (e) {
+        return `${url}: FETCH-FEHLER (${e?.message || e})`;
+      }
+    }
+
+    (async () => {
+      // 1) Schnell prüfen, ob Dateien erreichbar sind
+      const checks = await Promise.all([
+        check("./src/app.js"),
+        check("./src/render.js"),
+        check("./src/csv.js"),
+        check("./src/practice_vocab.js"),
+        check("./src/practice_grammar.js"),
+        check("./data/manifest.csv"),
+      ]);
+
+      // 2) Versuchen, die App zu importieren
+      try {
+        view.innerHTML =
+          "<pre class='card'>Datei-Checks:\n" +
+          checks.join("\n") +
+          "\n\nImportiere ./src/app.js …</pre>";
+
+        await import("./src/app.js");
+        // Wenn das klappt, übernimmt app.js automatisch die Anzeige.
+      } catch (e) {
+        view.innerHTML =
+          "<pre class='card'>Datei-Checks:\n" +
+          checks.join("\n") +
+          "\n\n❌ Import-Fehler in ./src/app.js (oder Imports):\n" +
+          (e?.stack || e?.message || String(e)) +
+          "\n</pre>";
+      }
+    })();
+  </script>
 
 </body>
 </html>
