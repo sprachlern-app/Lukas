@@ -17,12 +17,22 @@
     <p class="muted">Lade Inhalte…</p>
   </main>
 
-  <!-- TEST (nur einmal) -->
-  <script>
-    document.getElementById("view").textContent = "JS läuft ✅ (Test)";
+    <script>
+    // Debug: Zeigt Fehler direkt auf der Seite
+    window.addEventListener("error", (e) => {
+      const view = document.getElementById("view");
+      view.innerHTML = "<pre class='card'>JS-Fehler (window.error):\n" + (e.message || e.error) + "\n</pre>";
+    });
+
+    window.addEventListener("unhandledrejection", (e) => {
+      const view = document.getElementById("view");
+      view.innerHTML = "<pre class='card'>Promise-Fehler (unhandledrejection):\n" + (e.reason || "") + "\n</pre>";
+    });
+
+    document.getElementById("view").textContent = "JS läuft ✅ (Debug aktiv) – lade app.js…";
   </script>
 
-  <!-- App-Start (nur einmal) -->
   <script type="module" src="src/app.js"></script>
+
 </body>
 </html>
