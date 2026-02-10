@@ -1,1 +1,7 @@
+set_id,lemma,translation,example,de_hint,tags
+basic,der Stift,pen / zum Schreiben,Ich habe einen Stift.,Nomen;der,Schule
+basic,das Buch,book / zum Lesen,Ich lese ein Buch.,Nomen;das,Schule
+basic,die Pause,break / Zeit ohne Unterricht,In der Pause essen wir.,Nomen;die,Schule
+basic,lesen,to read / Wörter verstehen,Ich lese gern.,Verb,Verb
+basic,schreiben,to write / Wörter machen,Ich schreibe einen Satz.,Verb,Verb
 
