@@ -17,12 +17,33 @@
     <p class="muted">Lade Inhalte…</p>
   </main>
 
-    <script>
-    // Debug: Zeigt Fehler direkt auf der Seite
-    window.addEventListener("error", (e) => {
-      const view = document.getElementById("view");
-      view.innerHTML = "<pre class='card'>JS-Fehler (window.error):\n" + (e.message || e.error) + "\n</pre>";
-    });
+   <script>
+  (async () => {
+    const view = document.getElementById("view");
+    const files = [
+      "./src/csv.js",
+      "./src/render.js",
+      "./src/practice_vocab.js",
+      "./src/practice_grammar.js",
+      "./src/app.js",
+    ];
+
+    view.innerHTML = "<pre class='card'>Import-Test läuft…\n</pre>";
+    const pre = view.querySelector("pre");
+
+    for (const f of files) {
+      pre.textContent += `\n→ import ${f} …`;
+      try {
+        await import(f);
+        pre.textContent += " OK";
+      } catch (e) {
+        pre.textContent += "\n❌ FEHLER in " + f + ":\n" + (e.stack || e.message || String(e)) + "\n";
+        break;
+      }
+    }
+  })();
+</script>
+
 
     window.addEventListener("unhandledrejection", (e) => {
       const view = document.getElementById("view");
