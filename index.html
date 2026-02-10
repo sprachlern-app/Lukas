@@ -14,6 +14,7 @@
     button { font-size: 18px; padding: 12px 14px; border-radius:14px; border:1px solid #d7e3ff; background:#fff; cursor:pointer; }
     button.primary { background:#2d7ff9; color:#fff; border:none; font-weight:800; }
     button.gray { background:#eef3ff; border:1px solid #d7e3ff; font-weight:800; }
+    button.danger { background:#ffecec; border:1px solid #ffb6b6; font-weight:900; }
     .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef3ff; font-weight:700; }
     .hidden { display:none; }
     .q { font-size: 26px; margin: 10px 0 8px; }
@@ -25,7 +26,7 @@
     .feedback { font-size: 20px; font-weight:900; margin-top: 10px; min-height: 28px; }
     .score { margin-top: 6px; font-size: 18px; }
     .hr { height:1px; background:#e8efff; margin: 14px 0; }
-    .small { font-size: 14px; opacity:.8; }
+    .small { font-size: 14px; opacity:.85; line-height: 1.35; }
 
     /* Grammatik: feste Buttonfarben */
     .g-yellow { background:#f1c40f !important; color:#1f2d3d !important; }
@@ -48,6 +49,11 @@
       width: 0%;
       background: #2d7ff9;
     }
+
+    /* Lehrer-Checkliste */
+    .checkgrid { display:grid; gap:8px; margin-top: 8px; }
+    .checkrow { display:flex; gap:10px; align-items:center; }
+    .tag { font-size:12px; padding:2px 8px; border-radius:999px; background:#eef3ff; }
   </style>
 </head>
 
@@ -64,15 +70,37 @@
     <!-- Lehrer-Panel -->
     <details class="card" style="margin:12px 0; box-shadow:none; border:1px solid #e8efff;">
       <summary style="cursor:pointer; font-weight:900;">🧑‍🏫 Lehrer-Panel</summary>
-      <div style="margin-top:10px;" class="small">
-        <ul style="margin-top:6px;">
-          <li><strong>Grammatik</strong>: Datei wählen → „Datei laden“ → „Quiz starten“</li>
-          <li><strong>Reset</strong>: löscht gespeicherte Grammatik-Datei vom Gerät</li>
-        </ul>
+
+      <div class="small" style="margin-top:10px;">
+        <strong>Freischaltung (nur auf diesem Gerät gespeichert):</strong><br>
+        Schüler sehen nur die freigeschalteten Themen in den Dropdowns.
       </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button class="gray" id="tp_load_online">Dateien online laden (manifest.csv)</button>
+        <button class="gray" id="tp_use_builtin">Eingebaute Themen nutzen</button>
+        <button class="gray" id="tp_select_all">Alle erlauben</button>
+        <button class="gray" id="tp_select_none">Alle sperren</button>
+        <button class="primary" id="tp_apply">Speichern</button>
+      </div>
+
+      <div id="tp_status" class="small" style="margin-top:8px;">Status: —</div>
+
+      <div class="hr"></div>
+      <div class="small">
+        <strong>Themenliste</strong> (Häkchen = freigeschaltet):
+      </div>
+      <div id="tp_list" class="small">Noch nicht geladen.</div>
+
+      <div class="hr"></div>
       <div class="row">
-        <button class="gray" id="resetGrammar">Grammatik-Speicher löschen</button>
-        <button class="gray" id="goHome">Zur Startseite</button>
+        <button class="danger" id="tp_reset_storage">Freischaltung zurücksetzen</button>
+        <button class="gray" id="tp_go_home">Zur Startseite</button>
+      </div>
+
+      <div class="small" style="margin-top:10px;">
+        <strong>Später</strong>: Lege im GitHub-Repo einen Ordner <code>data/</code> an und eine Datei
+        <code>data/manifest.csv</code>. Dann lädt der Button „Dateien online laden“ alles automatisch.
       </div>
     </details>
 
@@ -88,7 +116,7 @@
 
         <div class="card" style="box-shadow:none; border:1px solid #e8efff;">
           <h3>🧩 Grammatik-Quiz</h3>
-          <p>Import-Datei + Erklärung + farbige Buttons.</p>
+          <p>Multiple Choice, Erklärung, Themen.</p>
           <button class="primary" onclick="showView('grammar')">Start</button>
         </div>
 
@@ -103,10 +131,20 @@
     <!-- VOCAB QUIZ -->
     <div id="vocab" class="card hidden">
       <h2 style="margin-top:0;">🧠 Vokabel-Quiz</h2>
+
       <div class="row">
         <label style="font-size:18px; font-weight:800;">Thema:</label>
         <select id="v_thema"></select>
         <button class="primary" id="v_start">Start / Neustart</button>
+      </div>
+
+      <div class="small" style="margin-top:6px;">
+        (Optional) Vokabeldatei direkt vom Gerät laden:
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <input id="v_file" type="file" accept=".csv,.txt" />
+        <button class="gray" id="v_load">Datei laden</button>
+        <span class="small">Format: de;en (oder de,en)</span>
       </div>
 
       <div class="q" id="v_frage">Wähle ein Thema und klicke Start.</div>
@@ -127,13 +165,22 @@
       <h2 style="margin-top:0;">🧩 Grammatik-Quiz</h2>
 
       <div class="row" style="margin-top:10px;">
-        <input id="g_file" type="file" accept=".csv,.txt" />
-        <button class="gray" id="g_load">Datei laden</button>
+        <label style="font-weight:800;">Thema:</label>
+        <select id="g_thema"></select>
+        <button class="gray" id="g_load_online">Thema laden</button>
         <button class="primary" id="g_start">Quiz starten</button>
-        <span class="small">Format: Frage;richtig;falsch1;falsch2;optional Erklärung</span>
       </div>
 
-      <div class="q" id="g_frage">Klicke „Quiz starten“ (oder lade vorher eine Datei).</div>
+      <div class="small" style="margin-top:6px;">
+        (Optional) Grammatikdatei direkt vom Gerät laden:
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <input id="g_file" type="file" accept=".csv,.txt" />
+        <button class="gray" id="g_load_local">Datei laden</button>
+        <span class="small">Format: frage;richtig;falsch1;falsch2;optional erklärung</span>
+      </div>
+
+      <div class="q" id="g_frage">Wähle ein Thema → „Thema laden“ → „Quiz starten“.</div>
       <div class="progress"><div id="g_prog"></div></div>
 
       <div class="choices">
@@ -182,12 +229,6 @@
   </div>
 
 <script>
-  // Optional: Fehler anzeigen (hilft beim Debuggen)
-  // window.onerror = function (msg, url, line, col) {
-  //   alert("JavaScript-Fehler:\n" + msg + "\nZeile: " + line + ":" + col);
-  //   return false;
-  // };
-
   // -----------------------------
   // NAVIGATION
   // -----------------------------
@@ -202,7 +243,7 @@
   }
 
   // -----------------------------
-  // SHARED HELPERS
+  // Helpers
   // -----------------------------
   function shuffle(arr){
     for(let i=arr.length-1;i>0;i--){
@@ -214,338 +255,267 @@
     btns.forEach(b => b.disabled = disabled);
   }
 
+  async function fetchText(path){
+    const res = await fetch(path, { cache: "no-store" });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    return await res.text();
+  }
+
+  function parseCSVLineSmart(line){
+    // Für unseren Zweck: simple Split (Semikolon bevorzugt, dann Komma, dann TAB)
+    let parts = line.split(";");
+    if(parts.length < 2) parts = line.split(",");
+    if(parts.length < 2) parts = line.split("\t");
+    return parts.map(p => p.trim());
+  }
+
   // -----------------------------
-  // GRAMMAR IMPORT HELPERS
+  // Default-Manifest (läuft sofort, ohne Ordner)
   // -----------------------------
-  function parseGrammarText(text){
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
-    const rows = [];
+  const MANIFEST_BUILTIN = [
+    // typ, titel, source, path
+    // source: "builtin" -> Daten sind eingebaut
+    // source: "remote"  -> CSV liegt online (path)
+    { typ: "vokabel",   titel: "Tiere (eingebaut)",     source: "builtin", path: "builtin:vok_tiere" },
+    { typ: "vokabel",   titel: "Schule (eingebaut)",    source: "builtin", path: "builtin:vok_schule" },
+    { typ: "grammatik", titel: "Artikel (eingebaut)",   source: "builtin", path: "builtin:gram_artikel" },
+    { typ: "grammatik", titel: "Präpositionen (eingebaut)", source: "builtin", path: "builtin:gram_praep" },
+  ];
 
-    for(const line of lines){
-      let parts = line.split(";");
-      if(parts.length < 4) parts = line.split(",");
-      if(parts.length < 4) parts = line.split("\t");
-      if(parts.length < 4) continue;
-
-      const frage  = parts[0].trim();
-      const richtig = parts[1].trim();
-      const falsch1 = parts[2].trim();
-      const falsch2 = parts[3].trim();
-      const erklaerung = (parts[4] ?? "").trim();
-
-      rows.push([frage, richtig, falsch1, falsch2, erklaerung]);
-    }
-    return rows;
-  }
-
-  function saveGrammarTable(){
-    if (typeof GRAMMAR_TABLE === "undefined") return;
-    localStorage.setItem("grammar_table", JSON.stringify(GRAMMAR_TABLE));
-  }
-  function loadGrammarTable(){
-    if (typeof GRAMMAR_TABLE === "undefined") return;
-    const raw = localStorage.getItem("grammar_table");
-    if(raw){
-      try { GRAMMAR_TABLE = JSON.parse(raw); } catch(e) {}
-    }
-  }
-
-  // =========================================================
-  // 1) VOCAB QUIZ
-  // =========================================================
-  const V_THEMEN = {
-    "Tiere": [
+  // Eingebaute Inhalte (damit sofort alles funktioniert)
+  const BUILTIN = {
+    vok_tiere: [
       ["Hund","dog"], ["Katze","cat"], ["Vogel","bird"], ["Pferd","horse"], ["Maus","mouse"]
     ],
-    "Schule": [
+    vok_schule: [
       ["Schule","school"], ["Buch","book"], ["Stift","pen"], ["Tafel","board"], ["Lehrer","teacher"]
     ],
-    "Haus": [
-      ["Haus","house"], ["Tür","door"], ["Fenster","window"], ["Tisch","table"], ["Stuhl","chair"]
+    gram_artikel: [
+      ["Wähle den Artikel: ___ Hund", "der", "die", "das", "Maskulin: der Hund"],
+      ["Wähle den Artikel: ___ Katze", "die", "der", "das", "Feminin: die Katze"],
+      ["Wähle den Artikel: ___ Haus", "das", "der", "die", "Neutrum: das Haus"],
+    ],
+    gram_praep: [
+      ["Ich gehe ___ Schule. (zu + der)", "zur", "zu", "in", "„zur“ = zu + der (Dativ)"],
+      ["Ich bin ___ Schule.", "in der", "in die", "zur", "Ort: in der (Dativ)"],
+      ["Ich gehe ___ Park.", "in den", "im", "zum", "Richtung: in den (Akkusativ)"],
     ]
   };
 
-  const vSel = document.getElementById("v_thema");
-  const vStartBtn = document.getElementById("v_start");
-  const vFrage = document.getElementById("v_frage");
-  const vFeedback = document.getElementById("v_feedback");
-  const vScore = document.getElementById("v_score");
-  const vProg = document.getElementById("v_prog");
-  const vBtns = [document.getElementById("v_b0"), document.getElementById("v_b1"), document.getElementById("v_b2")];
+  // -----------------------------
+  // Manifest + Freischaltung (nur Lehrergerät)
+  // -----------------------------
+  let MANIFEST = [];            // Array von {typ, titel, source, path}
+  let ENABLED = new Set();      // Set of path strings
+  const LS_ENABLED = "enabled_files_v1";
+  const LS_MANIFEST_MODE = "manifest_mode_v1"; // "builtin" oder "online"
 
-  let vVok = [];
-  let vIndex = 0;
-  let vPunkte = 0;
-  const vPauseMs = 1500;
-
-  function vMakeOptions(correct){
-    const alle = vVok.map(v => v[1]);
-    const falsche = alle.filter(w => w !== correct);
-    shuffle(falsche);
-    const opts = [correct, ...falsche.slice(0, 2)];
-    shuffle(opts);
-    return opts;
+  function loadEnabled(){
+    try {
+      const raw = localStorage.getItem(LS_ENABLED);
+      if(!raw) return;
+      const arr = JSON.parse(raw);
+      ENABLED = new Set(arr);
+    } catch(e) {}
+  }
+  function saveEnabled(){
+    localStorage.setItem(LS_ENABLED, JSON.stringify([...ENABLED]));
   }
 
-  function vUpdate(){
-    vProg.style.width = (vVok.length ? (100 * vIndex / vVok.length) : 0) + "%";
-    vFeedback.textContent = "";
-    vFeedback.style.color = "#1f2d3d";
-    vScore.textContent = `Punkte: ${vPunkte}/${vVok.length}`;
+  function setStatus(msg){
+    document.getElementById("tp_status").textContent = "Status: " + msg;
+  }
 
-    if(vIndex >= vVok.length){
-      vFrage.textContent = "🏁 Level geschafft!";
-      vProg.style.width = "100%";
-      const total = vVok.length;
-      vFeedback.style.color = "blue";
-      if(vPunkte === total) vFeedback.textContent = "🌟 Perfekt! Alles richtig!";
-      else if(vPunkte > total/2) vFeedback.textContent = "👏 Super gemacht!";
-      else vFeedback.textContent = "💪 Weiter üben!";
-      vBtns.forEach(b => { b.textContent="—"; b.disabled=true; });
+  function renderTeacherList(){
+    const box = document.getElementById("tp_list");
+    if(!MANIFEST.length){
+      box.textContent = "Keine Themen verfügbar.";
       return;
     }
 
-    const [de,en] = vVok[vIndex];
-    vFrage.textContent = `Was heißt „${de}“ auf Englisch?`;
-    const opts = vMakeOptions(en);
-    opts.forEach((t,i) => { vBtns[i].textContent=t; vBtns[i].disabled=false; });
-  }
+    const groups = { vokabel: [], grammatik: [] };
+    MANIFEST.forEach(it => (groups[it.typ] ??= []).push(it));
 
-  function vClick(choice){
-    if(vIndex >= vVok.length) return;
-    const correct = vVok[vIndex][1];
-    setButtons(vBtns,true);
+    let html = "";
+    for(const typ of ["vokabel","grammatik"]){
+      const items = groups[typ] || [];
+      if(!items.length) continue;
 
-    if(choice === correct){
-      vPunkte++;
-      vFeedback.style.color = "green";
-      vFeedback.textContent = "Richtig! ⭐ +1 Punkt";
-    } else {
-      vFeedback.style.color = "#e74c3c";
-      vFeedback.textContent = `Falsch. Richtig wäre: ${correct}`;
+      html += `<div style="margin-top:10px;"><strong>${typ.toUpperCase()}</strong></div>`;
+      html += `<div class="checkgrid">`;
+      for(const it of items){
+        const checked = ENABLED.has(it.path) ? "checked" : "";
+        const tag = it.source === "remote" ? "online" : "eingebaut";
+        html += `
+          <label class="checkrow">
+            <input type="checkbox" data-path="${it.path}" ${checked} />
+            <span>${it.titel} <span class="tag">${tag}</span></span>
+          </label>`;
+      }
+      html += `</div>`;
     }
-    vScore.textContent = `Punkte: ${vPunkte}/${vVok.length}`;
-    vIndex++;
-    setTimeout(vUpdate, vPauseMs);
+    box.innerHTML = html;
   }
 
-  Object.keys(V_THEMEN).forEach(name => {
-    const opt = document.createElement("option");
-    opt.value=name; opt.textContent=name;
-    vSel.appendChild(opt);
-  });
-
-  vStartBtn.addEventListener("click", () => {
-    vVok = V_THEMEN[vSel.value].map(([d,e]) => [d, String(e).toLowerCase()]);
-    shuffle(vVok);
-    vIndex = 0; vPunkte = 0;
-    vUpdate();
-  });
-
-  vBtns.forEach(b => b.addEventListener("click", () => vClick(b.textContent)));
-
-  // =========================================================
-  // 2) GRAMMAR QUIZ
-  // =========================================================
-  const gFile = document.getElementById("g_file");
-  const gLoad = document.getElementById("g_load");
-  const gStartBtn = document.getElementById("g_start");
-  const gFrage = document.getElementById("g_frage");
-  const gFeedback = document.getElementById("g_feedback");
-  const gScore = document.getElementById("g_score");
-  const gExplain = document.getElementById("g_explain");
-  const gProg = document.getElementById("g_prog");
-  const gBtns = [
-    document.getElementById("g_b0"),
-    document.getElementById("g_b1"),
-    document.getElementById("g_b2")
-  ];
-
-  let gItems = [];
-  let gIndex = 0;
-  let gPunkte = 0;
-  const gPauseMs = 1500;
-
-  let gCurrentCorrect = "";
-  let gCurrentOptions = [];
-
-  // Fallback-Fragen
-  let GRAMMAR_TABLE = [
-    ["Wähle den richtigen Artikel: ___ Hund", "der", "die", "das", "Maskulin: der Hund"],
-    ["Wähle die richtige Form: Ich ___ müde.", "bin", "bist", "ist", "1. Person Singular: ich bin"],
-    ["Wähle den richtigen Satz:", "Ich gehe zur Schule.", "Ich gehe Schule.", "Ich gehe in Schule.", "„zur“ = zu + der (Dativ)"],
-  ];
-  loadGrammarTable();
-
-  function gPrepareItems(){
-    return GRAMMAR_TABLE.map(row => ({
-      prompt: row[0],
-      correct: row[1],
-      wrong: [row[2], row[3]],
-      explain: (row[4] ?? "")
-    }));
-  }
-
-  function gMakeShuffledOptions(item){
-    const opts = [item.correct, ...item.wrong];
-    shuffle(opts);
-    return opts;
-  }
-
-  function gUpdate(){
-    gProg.style.width = (gItems.length ? (100 * gIndex / gItems.length) : 0) + "%";
-    gExplain.textContent = "—";
-
-    gFeedback.textContent = "";
-    gFeedback.style.color = "#1f2d3d";
-    gScore.textContent = `Punkte: ${gPunkte}/${gItems.length}`;
-
-    if(gIndex >= gItems.length){
-      gFrage.textContent = "🏁 Level geschafft!";
-      gProg.style.width = "100%";
-      const total = gItems.length;
-      gFeedback.style.color = "blue";
-      if(gPunkte === total) gFeedback.textContent = "🌟 Perfekt! Alles richtig!";
-      else if(gPunkte > total/2) gFeedback.textContent = "👏 Super gemacht!";
-      else gFeedback.textContent = "💪 Weiter üben!";
-      gBtns.forEach(b => { b.textContent="—"; b.disabled=true; });
-      return;
+  function ensureEnabledDefaults(){
+    // Wenn noch nichts gespeichert ist: standardmäßig alles freischalten
+    if(!localStorage.getItem(LS_ENABLED)){
+      ENABLED = new Set(MANIFEST.map(x => x.path));
+      saveEnabled();
     }
+  }
 
-    const item = gItems[gIndex];
-    gFrage.textContent = item.prompt;
+  function applyEnabledFromCheckboxes(){
+    const checks = document.querySelectorAll("#tp_list input[type=checkbox][data-path]");
+    ENABLED = new Set([...checks].filter(c => c.checked).map(c => c.getAttribute("data-path")));
+    saveEnabled();
+  }
 
-    gCurrentCorrect = item.correct;
-    gCurrentOptions = gMakeShuffledOptions(item);
+  function refreshDropdowns(){
+    // Vokabel-Dropdown
+    const vSel = document.getElementById("v_thema");
+    vSel.innerHTML = "";
+    const vok = MANIFEST.filter(x => x.typ === "vokabel" && ENABLED.has(x.path));
+    vok.forEach(it => {
+      const opt = document.createElement("option");
+      opt.value = it.path;
+      opt.textContent = it.titel;
+      vSel.appendChild(opt);
+    });
 
-    gCurrentOptions.forEach((text,i) => {
-      gBtns[i].textContent = text;
-      gBtns[i].disabled = false;
+    // Grammatik-Dropdown
+    const gSel = document.getElementById("g_thema");
+    gSel.innerHTML = "";
+    const gram = MANIFEST.filter(x => x.typ === "grammatik" && ENABLED.has(x.path));
+    gram.forEach(it => {
+      const opt = document.createElement("option");
+      opt.value = it.path;
+      opt.textContent = it.titel;
+      gSel.appendChild(opt);
     });
   }
 
-  function gClick(choice){
-    if(gIndex >= gItems.length) return;
-
-    const item = gItems[gIndex];
-    setButtons(gBtns,true);
-
-    if(choice === gCurrentCorrect){
-      gPunkte++;
-      gFeedback.style.color = "green";
-      gFeedback.textContent = "Richtig! ⭐ +1 Punkt";
-    } else {
-      gFeedback.style.color = "#e74c3c";
-      gFeedback.textContent = `Falsch. Richtig wäre: ${gCurrentCorrect}`;
-    }
-
-    if(item.explain && item.explain.trim().length){
-      gExplain.textContent = item.explain;
-    } else {
-      gExplain.textContent = "—";
-    }
-
-    gScore.textContent = `Punkte: ${gPunkte}/${gItems.length}`;
-    gIndex++;
-    setTimeout(gUpdate, gPauseMs);
+  function useBuiltinManifest(){
+    MANIFEST = MANIFEST_BUILTIN.slice();
+    localStorage.setItem(LS_MANIFEST_MODE, "builtin");
+    ensureEnabledDefaults();
+    setStatus("Eingebaute Themen aktiv.");
+    renderTeacherList();
+    refreshDropdowns();
   }
 
-  gBtns.forEach(b => b.addEventListener("click", () => gClick(b.textContent)));
-
-  gLoad.addEventListener("click", async () => {
-    const file = gFile.files && gFile.files[0];
-    if(!file){
-      gFeedback.style.color = "#e74c3c";
-      gFeedback.textContent = "Bitte zuerst eine Datei auswählen.";
-      return;
+  function parseManifestCSV(text){
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const out = [];
+    for(let i=0;i<lines.length;i++){
+      const line = lines[i];
+      if(i===0 && line.toLowerCase().startsWith("typ")) continue;
+      const parts = parseCSVLineSmart(line);
+      if(parts.length < 3) continue;
+      // Manifest-Format: typ;titel;datei
+      out.push({ typ: parts[0], titel: parts[1], source: "remote", path: parts[2] });
     }
-
-    const text = await file.text();
-    const table = parseGrammarText(text);
-
-    if(table.length === 0){
-      gFeedback.style.color = "#e74c3c";
-      gFeedback.textContent = "Datei konnte nicht gelesen werden. Prüfe: Frage;richtig;falsch1;falsch2;optional Erklärung";
-      return;
-    }
-
-    GRAMMAR_TABLE = table;
-    saveGrammarTable();
-    gFeedback.style.color = "green";
-    gFeedback.textContent = `✅ ${GRAMMAR_TABLE.length} Fragen geladen!`;
-  });
-
-  gStartBtn.addEventListener("click", () => {
-    gItems = gPrepareItems();
-    shuffle(gItems);
-    gIndex = 0;
-    gPunkte = 0;
-    gUpdate();
-  });
-
-  // =========================================================
-  // 3) CLOZE
-  // =========================================================
-  const CLOZE = [
-    { title: "Artikel einsetzen", text: "Ich sehe ____ Hund und ____ Katze.", answers: ["einen", "eine"] },
-    { title: "Präposition einsetzen", text: "Ich gehe ____ Schule. (Tipp: zu + der)", answers: ["zur"] }
-  ];
-
-  const cNew = document.getElementById("c_new");
-  const cCheck = document.getElementById("c_check");
-  const cTitle = document.getElementById("c_title");
-  const cText = document.getElementById("c_text");
-  const cInput = document.getElementById("c_input");
-  const cFeedback = document.getElementById("c_feedback");
-  let cItem = null;
-
-  function normalize(s){ return String(s).trim().toLowerCase(); }
-
-  function cPick(){
-    cItem = CLOZE[Math.floor(Math.random()*CLOZE.length)];
-    cTitle.textContent = cItem.title;
-    cText.textContent = cItem.text;
-    cInput.value = "";
-    cFeedback.textContent = "";
-    cFeedback.style.color = "#1f2d3d";
+    return out;
   }
 
-  cNew.addEventListener("click", cPick);
+  async function loadOnlineManifest(){
+    setStatus("Lade data/manifest.csv …");
+    try{
+      const text = await fetchText("data/manifest.csv");
+      const parsed = parseManifestCSV(text);
 
-  cCheck.addEventListener("click", () => {
-    if(!cItem){
-      cFeedback.style.color = "#e74c3c";
-      cFeedback.textContent = "Bitte zuerst „Neue Aufgabe“ klicken.";
-      return;
-    }
-    const userParts = cInput.value.split(",").map(normalize).filter(x => x.length);
-    const correct = cItem.answers.map(normalize);
+      if(!parsed.length){
+        setStatus("manifest.csv geladen, aber leer/Format falsch.");
+        return;
+      }
+      MANIFEST = parsed;
+      localStorage.setItem(LS_MANIFEST_MODE, "online");
 
-    if(userParts.length !== correct.length){
-      cFeedback.style.color = "#e74c3c";
-      cFeedback.textContent = `Du brauchst ${correct.length} Antwort(en) (kommagetrennt).`;
-      return;
-    }
+      // Wenn noch nie freigeschaltet: standardmäßig alles freischalten
+      if(!localStorage.getItem(LS_ENABLED)){
+        ENABLED = new Set(MANIFEST.map(x => x.path));
+        saveEnabled();
+      }
 
-    const ok = userParts.every((x,i) => x === correct[i]);
-    if(ok){
-      cFeedback.style.color = "green";
-      cFeedback.textContent = "Richtig! ⭐";
-    } else {
-      cFeedback.style.color = "#e74c3c";
-      cFeedback.textContent = `Noch nicht. Lösung: ${cItem.answers.join(", ")}`;
+      setStatus(`Online-Manifest aktiv. (${MANIFEST.length} Themen)`);
+      renderTeacherList();
+      refreshDropdowns();
+    } catch(e){
+      setStatus("Konnte manifest.csv nicht laden (noch kein data/Ordner?). Nutze erstmal eingebaute Themen.");
     }
-  });
+  }
 
   // Lehrer-Panel Buttons
-  document.getElementById("resetGrammar").addEventListener("click", () => {
-    localStorage.removeItem("grammar_table");
-    alert("Gespeicherte Grammatik-Datei wurde gelöscht.");
-  });
-  document.getElementById("goHome").addEventListener("click", () => showView("home"));
+  document.getElementById("tp_load_online").addEventListener("click", loadOnlineManifest);
+  document.getElementById("tp_use_builtin").addEventListener("click", useBuiltinManifest);
 
-  // Start
-  showView("home");
-</script>
-</body>
-</html>
+  document.getElementById("tp_select_all").addEventListener("click", () => {
+    ENABLED = new Set(MANIFEST.map(x => x.path));
+    renderTeacherList();
+  });
+  document.getElementById("tp_select_none").addEventListener("click", () => {
+    ENABLED = new Set();
+    renderTeacherList();
+  });
+
+  document.getElementById("tp_apply").addEventListener("click", () => {
+    applyEnabledFromCheckboxes();
+    refreshDropdowns();
+    alert("Freischaltung gespeichert ✅ (nur auf diesem Gerät)");
+  });
+
+  document.getElementById("tp_reset_storage").addEventListener("click", () => {
+    localStorage.removeItem(LS_ENABLED);
+    alert("Freischaltung zurückgesetzt. Seite neu laden oder eingebaute Themen aktivieren.");
+  });
+
+  document.getElementById("tp_go_home").addEventListener("click", () => showView("home"));
+
+  // -----------------------------
+  // Vokabel-CSV Parser + Loader
+  // -----------------------------
+  function parseVocabText(text){
+    // Erwartet: de;en oder de,en (Header optional)
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const out = [];
+    for(let i=0;i<lines.length;i++){
+      const line = lines[i];
+      const parts = parseCSVLineSmart(line);
+      if(parts.length < 2) continue;
+
+      const first = parts[0].toLowerCase();
+      if(i===0 && (first === "de" || first === "deutsch")) continue;
+
+      out.push([parts[0], String(parts[1]).toLowerCase()]);
+    }
+    return out;
+  }
+
+  async function loadVocabByPath(path){
+    // path kann builtin:xxx oder data/xxx.csv sein
+    if(path.startsWith("builtin:")){
+      const key = path.split(":")[1];
+      return (BUILTIN[key] || []).map(([d,e]) => [d, String(e).toLowerCase()]);
+    }
+    // remote csv
+    const text = await fetchText(path);
+    return parseVocabText(text);
+  }
+
+  // -----------------------------
+  // Grammar CSV Parser + Loader
+  // -----------------------------
+  function parseGrammarText(text){
+    // Format: frage;richtig;falsch1;falsch2;optional erklärung
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const rows = [];
+    for(let i=0;i<lines.length;i++){
+      const line = lines[i];
+      const parts = parseCSVLineSmart(line);
+      if(parts.length < 4) continue;
+
+      // Header erkennen
+      if(i===0 && parts[0].toLowerCase().startsWith("frage")) continue;
+
+      const frage = parts
+
