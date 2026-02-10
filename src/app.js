@@ -8,23 +8,20 @@ const DATA_BASE = "./data/";
 
 async function boot() {
   try {
-    // 1) manifest laden
     const manifest = await loadCSV(DATA_BASE + "manifest.csv");
 
-    // 2) aktiv + sortiert
     const modules = manifest
       .filter((m) => (m.enabled ?? "1") !== "0")
       .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0));
 
-    // 3) Menü bauen
     buildMenu(modules);
 
-    // 4) Start: erstes Modul öffnen
     if (modules.length === 0) {
       setView(el(`<p class="muted">Keine Module aktiv. Prüfe data/manifest.csv.</p>`));
       return;
     }
-    await openModule(modules[0], modules);
+
+    await openModule(modules[0]);
   } catch (err) {
     setView(el(`<pre class="card">Fehler:\n${escapeHTML(String(err))}</pre>`));
   }
@@ -38,31 +35,37 @@ function buildMenu(modules) {
 
   modules.forEach((m) => {
     const btn = el(`<button class="menu-btn">${escapeHTML(m.title || m.id)}</button>`);
-    btn.onclick = () => openModule(m, modules);
+    btn.onclick = () => openModule(m);
     menu.appendChild(btn);
   });
 }
 
-async function openModule(moduleRow) {
-  const { type, title, file, mode } = moduleRow;
+async function openModule(m) {
+  const type = (m.type || "").trim();
+  const title = (m.title || "").trim();
+  const file = (m.file || "").trim();
+  const mode = (m.mode || "").trim();
 
-  setView(el(`<p class="muted">Lade: ${escapeHTML(title || "")}…</p>`));
+  if (!file) {
+    setView(el(`<p class="muted">manifest.csv: Bei "${escapeHTML(m.id)}" fehlt "file".</p>`));
+    return;
+  }
 
-  // CSV-Daten für dieses Modul laden
+  setView(el(`<p class="muted">Lade: ${escapeHTML(title || m.id)}…</p>`));
+
   const data = await loadCSV(DATA_BASE + file);
 
-  // Nach Typ passende "Practice"-Engine starten
   if (type === "vocab") {
-    runVocab(data, title, mode);
+    runVocab(data, title || "Vokabeln", mode || "flashcards");
     return;
   }
 
   if (type === "grammar") {
-    runGrammar(data, title, mode);
+    runGrammar(data, title || "Grammatik", mode || "mcq");
     return;
   }
 
-  setView(el(`<p class="muted">Unbekannter Modultyp: ${escapeHTML(type)}</p>`));
+  setView(el(`<p class="muted">Unbekannter Modultyp: ${escapeHTML(type || "(leer)")}</p>`));
 }
 
 function escapeHTML(s) {
@@ -72,4 +75,3 @@ function escapeHTML(s) {
 }
 
 boot();
-
