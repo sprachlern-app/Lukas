@@ -1,14 +1,13 @@
 // src/practice_grammar.js
 import { el, setView } from "./render.js";
 
-// mode ist in V1.0 optional (kommt aus manifest.csv), wir ignorieren es erstmal
+// V1.0: Multiple Choice (mcq)
 export function runGrammar(rows, title = "Grammatik", mode = "mcq") {
   if (!Array.isArray(rows) || rows.length === 0) {
     setView(el(`<p class="muted">Keine Grammatik-Aufgaben gefunden.</p>`));
     return;
   }
 
-  // V1.0: Wir nehmen nur mcq-Aufgaben (falls später andere Typen dazukommen)
   const tasks = rows.filter((r) => (r.task_type || "mcq").toLowerCase() === "mcq");
   if (tasks.length === 0) {
     setView(el(`<p class="muted">Keine MCQ-Aufgaben gefunden.</p>`));
@@ -51,5 +50,34 @@ export function runGrammar(rows, title = "Grammatik", mode = "mcq") {
     options.forEach(([key, val]) => {
       const b = el(`<button class="opt">${key}: ${escapeHTML(val)}</button>`);
       b.onclick = () => {
-        const correct
+        const correct = (t.answer || "").toUpperCase().trim() === key;
+        const base = correct
+          ? "✅ Richtig!"
+          : `❌ Nicht ganz. Richtig ist ${escapeHTML(t.answer || "")}.`;
+        const expl = (t.explain || "").trim();
+        feedback.textContent = expl ? `${base} ${expl}` : base;
+      };
+      opts.appendChild(b);
+    });
 
+    node.querySelector("#prev").onclick = () => {
+      i = (i - 1 + tasks.length) % tasks.length;
+      render();
+    };
+
+    node.querySelector("#next").onclick = () => {
+      i = (i + 1) % tasks.length;
+      render();
+    };
+
+    setView(node);
+  }
+
+  render();
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, (m) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]
+  ));
+}
