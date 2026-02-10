@@ -1,1 +1,4 @@
+id,type,title,file,mode,level,enabled,sort
+vok1,vocab,Vokabeln (Basic),vokabel.csv,flashcards,A1,1,10
+gram1,grammar,Grammatik (Artikel),grammatik.csv,mcq,A1,1,20
 
