@@ -1,1 +1,5 @@
+set_id,task_type,prompt,option_a,option_b,option_c,option_d,answer,explain
+artikel,mcq,___ Hund ist klein.,Der,Die,Das,-,A,Hund ist maskulin → der Hund.
+artikel,mcq,___ Schule ist groß.,Der,Die,Das,-,B,Schule ist feminin → die Schule.
+artikel,mcq,Ich sehe ___ Buch.,der,das,die,-,B,Buch ist neutral → das Buch.
 
