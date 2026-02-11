@@ -204,3 +204,26 @@ button{
   width: 0%;
   transition: width .3s ease;
 }
+
+/* ===== Antwort-Markierung (Grammatik) ===== */
+.opt.is-disabled{
+  opacity: .55;
+  filter: grayscale(.15);
+  pointer-events: none;
+}
+
+.opt.is-correct{
+  background: rgba(34,197,94,.35) !important;
+  border-color: rgba(34,197,94,.75) !important;
+  box-shadow: 0 0 0 2px rgba(34,197,94,.22);
+}
+
+.opt.is-wrong{
+  background: rgba(244,63,94,.28) !important;
+  border-color: rgba(244,63,94,.75) !important;
+  box-shadow: 0 0 0 2px rgba(244,63,94,.18);
+}
+
+.opt.is-neutral{
+  opacity: .45;
+}
