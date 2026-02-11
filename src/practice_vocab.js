@@ -2,8 +2,8 @@
 import { el, setView } from "./render.js";
 import { isTeacher } from "./state.js";
 
-export function runVocab(items, title = "Vokabeln", mode = "cards") {
-  if (!Array.isArray(items) || items.length === 0) {
+export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
+  if (!Array.isArray(allItems) || allItems.length === 0) {
     setView(el(`<p class="muted">Keine Vokabeln gefunden.</p>`));
     return;
   }
@@ -17,7 +17,6 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
       .replace(/\s+/g, " ")
       .replace(/[“”„"]/g, '"');
 
-  // trennt "pen / zum Schreiben" -> {main:"pen", extra:"zum Schreiben"}
   function splitMainExtra(s) {
     const raw = String(s || "").trim();
     const parts = raw.split(" / ");
@@ -45,8 +44,45 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
     return ["c1", "c2", "c3", "c4"][idx % 4];
   }
 
+  // ===== Set-Auswahl vorbereiten =====
+  const sets = [
+    ...new Set(allItems.map((x) => String(x.set_id || "").trim()).filter(Boolean)),
+  ].sort((a, b) => a.localeCompare(b, "de"));
+
+  let selectedSet = sets[0] || "all"; // default: erstes Set (oder all)
+  let roundOn = false;
+  let roundSize = 10;
+
+  let items = []; // aktuell aktive Liste (Set + ggf. 10er)
+  let i = 0;
+
+  function getSetItems() {
+    if (!selectedSet || selectedSet === "all") return allItems.slice();
+    return allItems.filter((x) => String(x.set_id || "").trim() === selectedSet);
+  }
+
+  function rebuildItems() {
+    const base = getSetItems();
+    const picked = roundOn ? shuffle(base).slice(0, Math.min(roundSize, base.length)) : base;
+    items = picked.length ? picked : base; // falls Set leer wäre
+    i = 0;
+  }
+
+  // beim Start initialisieren
+  rebuildItems();
+
+  // Pools für Distraktoren (immer aus AKTUELLEM Items-Set, damit MCQ sinnvoll bleibt)
+  function makePools(currentItems) {
+    const lemmaPool = shuffle(
+      [...new Set(currentItems.map((x) => splitMainExtra(x.lemma).main).filter(Boolean))]
+    );
+    const transPool = shuffle(
+      [...new Set(currentItems.map((x) => splitMainExtra(x.translation).main).filter(Boolean))]
+    );
+    return { lemmaPool, transPool };
+  }
+
   // A + C: Richtung gemischt pro Item
-  // dir = "de2x" (lemma -> translation) oder "x2de" (translation -> lemma)
   function makePrompt(item) {
     const dir = Math.random() < 0.5 ? "de2x" : "x2de";
     if (dir === "de2x") {
@@ -65,24 +101,74 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
     };
   }
 
-  // Pools für Distraktoren (immer Hauptteil ohne Zusatz)
-  const lemmaPool = shuffle(
-    [...new Set(items.map((x) => splitMainExtra(x.lemma).main).filter(Boolean))]
-  );
-  const transPool = shuffle(
-    [...new Set(items.map((x) => splitMainExtra(x.translation).main).filter(Boolean))]
-  );
+  // ===== UI-Leiste (Set + 10er-Runde) =====
+  function controlBarHTML() {
+    const setOptions = [
+      `<option value="all"${selectedSet === "all" ? " selected" : ""}>Alle Sets</option>`,
+      ...sets.map(
+        (s) => `<option value="${escapeHTML(s)}"${selectedSet === s ? " selected" : ""}>${escapeHTML(s)}</option>`
+      ),
+    ].join("");
 
-  let i = 0;
+    return `
+      <div class="row" style="align-items:center; gap:10px;">
+        <label class="muted" style="font-weight:700;">Set:</label>
+        <select id="setSelect"
+          style="font-size:1.1rem; padding:10px 12px; border-radius:14px;
+                 border:1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: white;">
+          ${setOptions}
+        </select>
+
+        <button id="roundBtn" type="button">${roundOn ? "🎯 10er-Runde: AN" : "🎯 10er-Runde: AUS"}</button>
+        <button id="reshuffleBtn" type="button">🔁 Neu mischen</button>
+
+        <span class="muted" style="margin-left:auto;">
+          ${items.length} ${roundOn ? "(in Runde)" : "(im Set)"}
+        </span>
+      </div>
+    `;
+  }
+
+  function wireControls(node, rerenderFn) {
+    const setSelect = node.querySelector("#setSelect");
+    const roundBtn = node.querySelector("#roundBtn");
+    const reshuffleBtn = node.querySelector("#reshuffleBtn");
+
+    if (setSelect) {
+      setSelect.onchange = () => {
+        selectedSet = setSelect.value || "all";
+        rebuildItems();
+        rerenderFn();
+      };
+    }
+
+    if (roundBtn) {
+      roundBtn.onclick = () => {
+        roundOn = !roundOn;
+        rebuildItems();
+        rerenderFn();
+      };
+    }
+
+    if (reshuffleBtn) {
+      reshuffleBtn.onclick = () => {
+        // nur die aktuelle Liste neu ziehen (besonders für 10er)
+        rebuildItems();
+        rerenderFn();
+      };
+    }
+  }
 
   // ===== CARDS =====
   function renderCards() {
+    if (!items.length) {
+      setView(el(`<p class="muted">Keine Vokabeln im gewählten Set.</p>`));
+      return;
+    }
+
     const item = items[i];
     const p = makePrompt(item);
-
     const { main: answerMain, extra: answerExtra } = splitMainExtra(p.answerRaw);
-
-    // de_hint soll NICHT direkt sichtbar sein
     const teacherHint = (item.de_hint || "").trim();
 
     let showBack = false;
@@ -90,11 +176,11 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
     const node = el(`
       <div class="card">
         <h2>${escapeHTML(title)}</h2>
+        ${controlBarHTML()}
         ${progressBar(items.length, i)}
 
         <div class="flashcard ${colorClass(i)}">
           <div class="label">Karte</div>
-
           <div class="big">${escapeHTML(p.question)}</div>
 
           <hr />
@@ -112,8 +198,9 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
       </div>
     `);
 
-    const backArea = node.querySelector("#backArea");
+    wireControls(node, renderCards);
 
+    const backArea = node.querySelector("#backArea");
     function paintBack() {
       if (!showBack) {
         backArea.className = "muted";
@@ -156,23 +243,28 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
 
   // ===== MCQ =====
   function renderMCQ() {
+    if (!items.length) {
+      setView(el(`<p class="muted">Keine Vokabeln im gewählten Set.</p>`));
+      return;
+    }
+
     const item = items[i];
     const p = makePrompt(item);
-
     const { main: correctMain, extra: correctExtra } = splitMainExtra(p.answerRaw);
 
-    // Richtung: wenn Frage=lemma, Antworten aus translation-Pool; sonst aus lemma-Pool
+    const { lemmaPool, transPool } = makePools(items);
     const pool = p.dir === "de2x" ? transPool : lemmaPool;
 
-    // Distraktoren: 3 andere
     const distractors = pool.filter((x) => norm(x) !== norm(correctMain)).slice(0, 3);
     const choices = shuffle([correctMain, ...distractors]);
 
     let locked = false;
+    let reveal = false;
 
     const node = el(`
       <div class="card">
         <h2>${escapeHTML(title)}</h2>
+        ${controlBarHTML()}
         ${progressBar(items.length, i)}
 
         <div class="big">${escapeHTML(p.question)}</div>
@@ -193,27 +285,25 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
       </div>
     `);
 
+    wireControls(node, renderMCQ);
+
     const opts = node.querySelector("#opts");
     const feedback = node.querySelector("#feedback");
 
     const teacherRow = node.querySelector("#teacherRow");
     const revealBtn = node.querySelector("#revealBtn");
-
-    let reveal = false;
     if (isTeacher()) {
       teacherRow.style.display = "flex";
       revealBtn.onclick = () => {
         reveal = true;
         revealBtn.disabled = true;
         revealBtn.textContent = "Lösung angezeigt";
-        // nur Lehrkraft: ggf. Zusatz anzeigen
         if (correctExtra) {
           feedback.textContent = (feedback.textContent || "").trim() + `  (Zusatz: ${correctExtra})`;
         }
       };
     }
 
-    // Buttons erzeugen
     const btns = choices.map((text) => {
       const b = el(`<button class="opt">${escapeHTML(text)}</button>`);
       opts.appendChild(b);
@@ -224,17 +314,14 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
       if (locked) return;
       locked = true;
 
-      // alle deaktivieren + neutral
       btns.forEach((b) => b.classList.add("is-disabled", "is-neutral"));
 
-      // richtige grün
       const idxCorrect = choices.findIndex((c) => norm(c) === norm(correctMain));
       if (idxCorrect >= 0) {
         btns[idxCorrect].classList.remove("is-neutral");
         btns[idxCorrect].classList.add("is-correct");
       }
 
-      // gewählte rot, falls falsch
       if (norm(chosenText) !== norm(correctMain)) {
         const idxChosen = choices.findIndex((c) => norm(c) === norm(chosenText));
         if (idxChosen >= 0) {
@@ -246,15 +333,12 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
         feedback.textContent = "✅ Richtig!";
       }
 
-      // Lehrkraft-Info NICHT automatisch (wie bei Grammatik, Variante B)
       if (isTeacher() && reveal && correctExtra) {
         feedback.textContent = (feedback.textContent || "").trim() + `  (Zusatz: ${correctExtra})`;
       }
     }
 
-    btns.forEach((b, idx) => {
-      b.onclick = () => lockAndMark(choices[idx]);
-    });
+    btns.forEach((b, idx) => (b.onclick = () => lockAndMark(choices[idx])));
 
     node.querySelector("#prev").onclick = () => {
       i = (i - 1 + items.length) % items.length;
@@ -270,6 +354,11 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
 
   // ===== WRITE =====
   function renderWrite() {
+    if (!items.length) {
+      setView(el(`<p class="muted">Keine Vokabeln im gewählten Set.</p>`));
+      return;
+    }
+
     const item = items[i];
     const p = makePrompt(item);
     const { main: correctMain, extra: correctExtra } = splitMainExtra(p.answerRaw);
@@ -277,6 +366,7 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
     const node = el(`
       <div class="card">
         <h2>${escapeHTML(title)}</h2>
+        ${controlBarHTML()}
         ${progressBar(items.length, i)}
 
         <div class="big">${escapeHTML(p.question)}</div>
@@ -304,10 +394,11 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
       </div>
     `);
 
+    wireControls(node, renderWrite);
+
     const inp = node.querySelector("#inp");
     const feedback = node.querySelector("#feedback");
 
-    // Lehrerbutton (Variante B)
     const teacherRow = node.querySelector("#teacherRow");
     const revealBtn = node.querySelector("#revealBtn");
     if (isTeacher()) {
@@ -324,15 +415,12 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
       if (guess && guess === norm(correctMain)) {
         feedback.textContent = "✅ Richtig!";
       } else {
-        feedback.textContent = `❌ Nicht ganz.`;
-        // Schüler sehen nicht automatisch die Lösung (wie bei euch gewünscht) – nur Lehrkraft über Button
+        feedback.textContent = "❌ Nicht ganz.";
       }
     }
 
     node.querySelector("#check").onclick = check;
-    inp.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") check();
-    });
+    inp.addEventListener("keydown", (e) => e.key === "Enter" && check());
 
     node.querySelector("#prev").onclick = () => {
       i = (i - 1 + items.length) % items.length;
