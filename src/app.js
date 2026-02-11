@@ -42,7 +42,7 @@ function wireTeacherButton() {
 
   paint();
   btn.onclick = () => {
-    const res = isteacher()? teacherLogout():teacherLogin();
+    const res = isteacher()? teacherLogout() : teacherLogin();
     paint();
     if (!res.ok) alert("Code falsch.");
   };
