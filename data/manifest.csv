@@ -1,3 +1,5 @@
 ﻿id,type,title,file,mode,level,enabled,sort
-vok_basic,vocab,Vokabeln – Basic,vokabel.csv,flashcards,A1,1,10
+vok_cards,vocab,Vokabeln – Karten,vokabel.csv,cards,A1,1,10
+vok_mcq,vocab,Vokabeln – Multiple Choice,vokabel.csv,mcq,A1,1,11
+vok_write,vocab,Vokabeln – Schreiben,vokabel.csv,write,A1,1,12
 gram_art,grammar,Grammatik – Artikel,grammatik.csv,mcq,A1,1,20
