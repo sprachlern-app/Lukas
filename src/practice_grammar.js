@@ -31,7 +31,7 @@ export function runGrammar(rows, title = "Grammatik") {
 
     const node = el(`
       <div class="card">
-        <h2>${escapeHTML(title)}</h2>
+        <h2>⭐ ${escapeHTML(title)}</h2>
 
         <div class="progress">
           <div class="progress-bar" style="width:${((i + 1) / tasks.length) * 100}%"></div>
