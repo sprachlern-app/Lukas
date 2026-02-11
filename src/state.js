@@ -12,6 +12,7 @@ export function toggleTeacherWithPrompt() {
     window.dispatchEvent(new Event("teacher-mode-changed"));
     return { ok: true, teacher: false };
   }
+  export function teacherLogin() {
   const code = prompt("Lehrkraft-Code eingeben:");
   if ((code || "").trim() === PASSCODE) {
     setTeacher(true);
@@ -20,5 +21,16 @@ export function toggleTeacherWithPrompt() {
   }
   window.dispatchEvent(new Event("teacher-mode-changed"));
   return { ok: false, teacher: false };
+}
+
+export function teacherLogout() {
+  setTeacher(false);
+  window.dispatchEvent(new Event("teacher-mode-changed"));
+  return { ok: true, teacher: false };
+}
+
+export function resetTeacherHard() {
+  localStorage.removeItem(KEY);
+  window.dispatchEvent(new Event("teacher-mode-changed"));
 }
 
