@@ -7,16 +7,20 @@
   <link rel="stylesheet" href="assets/css/app.css" />
 </head>
 <body>
+  <div id="app">
+    <header class="topbar">
+      <h1>Sprachlern-App</h1>
 
-  <header class="topbar">
-    <h1>Sprachlern-App</h1>
-    <nav id="menu"></nav>
-  </header>
+      <nav id="menu">
+        <button id="teacherBtn" class="teacher-btn" type="button">🔒 Lehrkraft</button>
+      </nav>
+    </header>
 
-  <main id="view">
-    <p class="muted">Lade Inhalte…</p>
-  </main>
+    <main id="view">
+      <p class="muted">Lade Inhalte…</p>
+    </main>
 
-  <script type="module" src="src/app.js"></script>
+    <script type="module" src="src/app.js"></script>
+  </div>
 </body>
 </html>
