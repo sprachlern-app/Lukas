@@ -1,17 +1,16 @@
 // src/practice_vocab.js
 import { el, setView } from "./render.js";
+import { isTeacher } from "./state.js"; // Hinweis nur für Lehrkraft (wenn gewünscht)
 
-// mode: "cards" | "mcq" | "write"
-// Direction: A/C: wir mischen automatisch (Wort->Bedeutung oder Bedeutung->Wort)
 export function runVocab(items, title = "Vokabeln", mode = "cards") {
   if (!Array.isArray(items) || items.length === 0) {
     setView(el(`<p class="muted">Keine Vokabeln gefunden.</p>`));
     return;
   }
 
-  // kleine Helfer
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const shuffle = (arr) => arr.slice().sort(() => Math.random() - 0.5);
+  const norm = (s) =>
+    String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
 
   let i = 0;
   let showBack = false;
@@ -24,42 +23,29 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
     `;
   }
 
-  function normalize(s) {
-    return String(s || "")
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, " ")
-      .replace(/[“”„"]/g, '"');
-  }
-
-  // A + C: Mischrichtung (zufällig pro Karte/Item)
+  // A + C: Richtung mischen (Deutsch->Bedeutung ODER Bedeutung->Deutsch)
   function makePrompt(item) {
     const dir = Math.random() < 0.5 ? "de2x" : "x2de";
     if (dir === "de2x") {
       return {
         question: item.lemma || "",
         answer: item.translation || "",
-        hint: item.de_hint || "",
         example: item.example || "",
+        hint: item.de_hint || "",
         dir,
       };
     }
     return {
       question: item.translation || "",
       answer: item.lemma || "",
-      hint: item.de_hint || "",
       example: item.example || "",
+      hint: item.de_hint || "",
       dir,
     };
   }
 
-  // MCQ: generiert Distraktoren aus anderen Items
-  function buildMCQChoices(correct, allItems, field) {
-    const pool = allItems
-      .map((x) => (x[field] || "").trim())
-      .filter((x) => x && x !== correct);
-    const distractors = shuffle([...new Set(pool)]).slice(0, 3);
-    return shuffle([correct, ...distractors]);
+  function colorClass(idx) {
+    return ["c1", "c2", "c3", "c4"][idx % 4];
   }
 
   function renderCards() {
@@ -71,19 +57,27 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
         <h2>${escapeHTML(title)}</h2>
         ${progressBar(items.length, i)}
 
-        <div class="big">${escapeHTML(p.question)}</div>
-        <div class="muted">${escapeHTML(p.hint)}</div>
+        <div class="flashcard ${colorClass(i)}">
+          <div class="label">Karte</div>
 
-        <hr />
+          <div class="big">${escapeHTML(p.question)}</div>
 
-        ${
-          showBack
-            ? `
-              <div class="big">${escapeHTML(p.answer)}</div>
-              <div class="muted">${escapeHTML(p.example)}</div>
-            `
-            : `<div class="muted">Tippe auf „Umdrehen“.</div>`
-        }
+          <hr />
+
+          ${
+            showBack
+              ? `
+                <div class="big">${escapeHTML(p.answer)}</div>
+                <div class="muted">${escapeHTML(p.example)}</div>
+                ${
+                  isTeacher() && p.hint
+                    ? `<div class="muted"><b>Lehrerhinweis:</b> ${escapeHTML(p.hint)}</div>`
+                    : ``
+                }
+              `
+              : `<div class="muted">Tippe auf „Umdrehen“.</div>`
+          }
+        </div>
 
         <div class="row">
           <button id="prev">←</button>
@@ -113,12 +107,18 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
     setView(node);
   }
 
+  function buildMCQChoices(correct, allItems, field) {
+    const pool = allItems
+      .map((x) => (x[field] || "").trim())
+      .filter((x) => x && norm(x) !== norm(correct));
+    const distractors = shuffle([...new Set(pool)]).slice(0, 3);
+    return shuffle([correct, ...distractors]);
+  }
+
   function renderMCQ() {
     const item = items[i];
     const p = makePrompt(item);
 
-    // wir fragen: Frage = p.question, richtige Lösung = p.answer
-    // Distraktoren ziehen wir aus passendem Feld:
     const field = p.dir === "de2x" ? "translation" : "lemma";
     const correct = (p.answer || "").trim();
     const choices = buildMCQChoices(correct, items, field);
@@ -131,7 +131,6 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
         ${progressBar(items.length, i)}
 
         <div class="big">${escapeHTML(p.question)}</div>
-        <div class="muted">${escapeHTML(p.hint)}</div>
 
         <div class="stack" id="opts"></div>
         <div id="feedback" class="muted"></div>
@@ -158,20 +157,16 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
       if (locked) return;
       locked = true;
 
-      btns.forEach((b) => {
-        b.classList.add("is-disabled", "is-neutral");
-      });
+      btns.forEach((b) => b.classList.add("is-disabled", "is-neutral"));
 
-      // richtige finden
-      const idxCorrect = choices.findIndex((c) => normalize(c) === normalize(correct));
+      const idxCorrect = choices.findIndex((c) => norm(c) === norm(correct));
       if (idxCorrect >= 0) {
         btns[idxCorrect].classList.remove("is-neutral");
         btns[idxCorrect].classList.add("is-correct");
       }
 
-      // falsche markieren
-      if (normalize(chosen) !== normalize(correct)) {
-        const idxChosen = choices.findIndex((c) => normalize(c) === normalize(chosen));
+      if (norm(chosen) !== norm(correct)) {
+        const idxChosen = choices.findIndex((c) => norm(c) === norm(chosen));
         if (idxChosen >= 0) {
           btns[idxChosen].classList.remove("is-neutral");
           btns[idxChosen].classList.add("is-wrong");
@@ -180,11 +175,11 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
       } else {
         feedback.textContent = "✅ Richtig!";
       }
+
+      // de_hint NICHT anzeigen (nur evtl. später als Lehrkraft-Button)
     }
 
-    btns.forEach((b, idx) => {
-      b.onclick = () => mark(choices[idx]);
-    });
+    btns.forEach((b, idx) => (b.onclick = () => mark(choices[idx])));
 
     node.querySelector("#prev").onclick = () => {
       i = (i - 1 + items.length) % items.length;
@@ -201,7 +196,6 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
   function renderWrite() {
     const item = items[i];
     const p = makePrompt(item);
-
     const correct = (p.answer || "").trim();
 
     const node = el(`
@@ -210,10 +204,12 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
         ${progressBar(items.length, i)}
 
         <div class="big">${escapeHTML(p.question)}</div>
-        <div class="muted">${escapeHTML(p.hint)}</div>
 
         <div class="row">
-          <input id="inp" type="text" style="flex:1; font-size:1.2rem; padding:14px 16px; border-radius:16px; border:1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: white;" placeholder="Schreibe die Lösung…" />
+          <input id="inp" type="text"
+            style="flex:1; font-size:1.2rem; padding:14px 16px; border-radius:16px;
+                   border:1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: white;"
+            placeholder="Schreibe die Lösung…" />
           <button id="check">Prüfen</button>
         </div>
 
@@ -232,20 +228,12 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
     const feedback = node.querySelector("#feedback");
 
     function check() {
-      const guess = normalize(inp.value);
-      const ok = guess && guess === normalize(correct);
-
-      if (ok) {
-        feedback.textContent = "✅ Richtig!";
-      } else {
-        feedback.textContent = `❌ Nicht ganz. Lösung: ${correct}`;
-      }
+      const ok = norm(inp.value) && norm(inp.value) === norm(correct);
+      feedback.textContent = ok ? "✅ Richtig!" : `❌ Nicht ganz. Lösung: ${correct}`;
     }
 
     node.querySelector("#check").onclick = check;
-    inp.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") check();
-    });
+    inp.addEventListener("keydown", (e) => e.key === "Enter" && check());
 
     node.querySelector("#prev").onclick = () => {
       i = (i - 1 + items.length) % items.length;
@@ -260,7 +248,6 @@ export function runVocab(items, title = "Vokabeln", mode = "cards") {
     inp.focus();
   }
 
-  // Router
   if (mode === "mcq") return renderMCQ();
   if (mode === "write") return renderWrite();
   return renderCards();
