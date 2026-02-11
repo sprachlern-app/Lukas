@@ -304,11 +304,13 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
       };
     }
 
-    const btns = choices.map((text) => {
-      const b = el(`<button class="opt">${escapeHTML(text)}</button>`);
-      opts.appendChild(b);
-      return b;
-    });
+    const keys = ["A", "B", "C", "D"];
+const btns = choices.map((text, idx) => {
+  const key = keys[idx] || "";
+  const b = el(`<button class="opt">${key}: ${escapeHTML(text)}</button>`);
+  opts.appendChild(b);
+  return b;
+});
 
     function lockAndMark(chosenText) {
       if (locked) return;
