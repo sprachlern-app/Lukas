@@ -138,6 +138,9 @@ export function runGrammar(rows, title = "Grammatik") {
       i = (i + 1) % tasks.length;
       render();
     };
+    // Wenn Lehrkraftmodus umgeschaltet wird: Bildschirm neu zeichnen
+    const onTeacherChange = () => render();
+    window.addEventListener("teacher-mode-changed", onTeacherChange, { once: true });
 
     setView(node);
   }
