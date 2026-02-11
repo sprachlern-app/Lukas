@@ -13,6 +13,7 @@
 
       <nav id="menu">
         <button id="teacherBtn" class="teacher-btn" type="button">🔒 Lehrkraft</button>
+        <button id="resetTeacherBtn" type="button">🧹 Reset Lehrmodus</button>
       </nav>
     </header>
 
@@ -20,7 +21,17 @@
       <p class="muted">Lade Inhalte…</p>
     </main>
 
-    <script type="module" src="src/app.js?v=15"></script>
+    <script>
+      // Hard reset, unabhängig von app.js
+      document.getElementById("resetTeacherBtn").onclick = () => {
+        localStorage.removeItem("teacher_mode_v1");
+        alert("Lehrmodus zurückgesetzt. Seite lädt neu.");
+        location.reload();
+      };
+    </script>
+
+    <!-- App-Start (Cache-Buster ist sinnvoll) -->
+    <script type="module" src="src/app.js?v=999"></script>
   </div>
 </body>
 </html>
