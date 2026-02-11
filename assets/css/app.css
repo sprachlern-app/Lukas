@@ -255,3 +255,29 @@ button{
   border-color: rgba(244,63,94,1) !important;
   box-shadow: 0 0 0 4px rgba(244,63,94,.30) !important;
 }
+
+/* ===== HELLE Markierung für Unterricht / Beamer ===== */
+
+.opt.is-correct{
+  background: #22c55e !important;   /* klares Grün */
+  color: white !important;
+  border-color: #16a34a !important;
+  box-shadow: none !important;
+}
+
+.opt.is-wrong{
+  background: #ef4444 !important;   /* klares Rot */
+  color: white !important;
+  border-color: #dc2626 !important;
+  box-shadow: none !important;
+}
+
+.opt.is-neutral{
+  opacity: .5 !important;
+}
+
+/* Grauschleier komplett entfernen */
+.opt{
+  backdrop-filter: none !important;
+  filter: none !important;
+}
