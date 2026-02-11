@@ -1,8 +1,8 @@
 // src/practice_grammar.js
 import { el, setView } from "./render.js";
+import { isTeacher } from "./state.js";
 
-// V1.0: Multiple Choice (mcq)
-export function runGrammar(rows, title = "Grammatik", mode = "mcq") {
+export function runGrammar(rows, title = "Grammatik") {
   if (!Array.isArray(rows) || rows.length === 0) {
     setView(el(`<p class="muted">Keine Grammatik-Aufgaben gefunden.</p>`));
     return;
@@ -29,7 +29,6 @@ export function runGrammar(rows, title = "Grammatik", mode = "mcq") {
     const node = el(`
       <div class="card">
         <h2>${escapeHTML(title)}</h2>
-
         <div class="big">${escapeHTML(t.prompt || "")}</div>
 
         <div class="stack" id="opts"></div>
@@ -51,11 +50,15 @@ export function runGrammar(rows, title = "Grammatik", mode = "mcq") {
       const b = el(`<button class="opt">${key}: ${escapeHTML(val)}</button>`);
       b.onclick = () => {
         const correct = (t.answer || "").toUpperCase().trim() === key;
-        const base = correct
-          ? "✅ Richtig!"
-          : `❌ Nicht ganz. Richtig ist ${escapeHTML(t.answer || "")}.`;
+        const base = correct ? "✅ Richtig!" : `❌ Nicht ganz.`;
+
+        // Schüler: nur Feedback; Lehrkraft: zusätzlich Erklärung + richtige Lösung
         const expl = (t.explain || "").trim();
-        feedback.textContent = expl ? `${base} ${expl}` : base;
+        const teacherExtra = isTeacher()
+          ? ` Richtig: ${escapeHTML(t.answer || "")}.${expl ? " " + expl : ""}`
+          : "";
+
+        feedback.textContent = base + teacherExtra;
       };
       opts.appendChild(b);
     });
@@ -64,7 +67,6 @@ export function runGrammar(rows, title = "Grammatik", mode = "mcq") {
       i = (i - 1 + tasks.length) % tasks.length;
       render();
     };
-
     node.querySelector("#next").onclick = () => {
       i = (i + 1) % tasks.length;
       render();
