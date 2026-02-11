@@ -29,7 +29,10 @@ export function runGrammar(rows, title = "Grammatik") {
     const node = el(`
       <div class="card">
         <h2>${escapeHTML(title)}</h2>
-        <div class="big">${escapeHTML(t.prompt || "")}</div>
+        <div class="progress">
+          <div class="progress-bar" style="${((i+1)/tasks.length)*100}%><div>
+        </div>
+        <div class="big">${escapeHTML(item.lemma || "")}</div>
 
         <div class="stack" id="opts"></div>
         <div id="feedback" class="muted"></div>
