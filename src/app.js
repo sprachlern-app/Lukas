@@ -3,10 +3,13 @@ import { loadCSV } from "./csv.js";
 import { setView, el } from "./render.js";
 import { runVocab } from "./practice_vocab.js";
 import { runGrammar } from "./practice_grammar.js";
+import { isTeacher, toggleTeacherWithPrompt } from "./state.js";
 
 const DATA_BASE = "./data/";
 
 async function boot() {
+  wireTeacherButton();
+
   try {
     const manifest = await loadCSV(DATA_BASE + "manifest.csv");
 
@@ -27,11 +30,36 @@ async function boot() {
   }
 }
 
+function wireTeacherButton() {
+  const btn = document.getElementById("teacherBtn");
+  if (!btn) return;
+
+  const paint = () => {
+    const on = isTeacher();
+    btn.classList.toggle("on", on);
+    btn.textContent = on ? "✅ Lehrkraft" : "🔒 Lehrkraft";
+  };
+
+  paint();
+  btn.onclick = () => {
+    const res = toggleTeacherWithPrompt();
+    paint();
+    if (!res.ok) alert("Code falsch.");
+  };
+}
+
 function buildMenu(modules) {
   const menu = document.getElementById("menu");
   if (!menu) return;
 
-  menu.innerHTML = "";
+  // teacherBtn bleibt drin – wir hängen nur Module dahinter an
+  const teacherBtn = document.getElementById("teacherBtn");
+
+  // alles außer teacherBtn entfernen
+  [...menu.querySelectorAll("button")].forEach((b) => {
+    if (teacherBtn && b === teacherBtn) return;
+    b.remove();
+  });
 
   modules.forEach((m) => {
     const btn = el(`<button class="menu-btn">${escapeHTML(m.title || m.id)}</button>`);
