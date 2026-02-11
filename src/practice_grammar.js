@@ -18,6 +18,7 @@ export function runGrammar(rows, title = "Grammatik") {
 
   function render() {
     const t = tasks[i];
+    const correctKey = (t.answer || "").toUpperCase().trim();
 
     const options = [
       ["A", t.option_a],
@@ -26,13 +27,14 @@ export function runGrammar(rows, title = "Grammatik") {
       ["D", t.option_d],
     ].filter(([, val]) => (val ?? "").trim() && val !== "-");
 
+    let locked = false;
+
     const node = el(`
       <div class="card">
-
         <h2>${escapeHTML(title)}</h2>
 
         <div class="progress">
-          <div class="progress-bar" style="width:${((i+1)/tasks.length)*100}%"></div>
+          <div class="progress-bar" style="width:${((i + 1) / tasks.length) * 100}%"></div>
         </div>
 
         <div class="big">${escapeHTML(t.prompt || "")}</div>
@@ -49,25 +51,58 @@ export function runGrammar(rows, title = "Grammatik") {
       </div>
     `);
 
-    const opts = node.querySelector("#opts");
+    const optsEl = node.querySelector("#opts");
     const feedback = node.querySelector("#feedback");
 
+    // Buttons erzeugen + merken
+    const btns = new Map(); // key -> button
     options.forEach(([key, val]) => {
       const b = el(`<button class="opt">${key}: ${escapeHTML(val)}</button>`);
-      b.onclick = () => {
-        const correct = (t.answer || "").toUpperCase().trim() === key;
-
-        const base = correct ? "✅ Richtig!" : "❌ Nicht ganz.";
-
-        const expl = (t.explain || "").trim();
-        const teacherExtra = isTeacher()
-          ? ` Richtig: ${escapeHTML(t.answer || "")}.${expl ? " " + expl : ""}`
-          : "";
-
-        feedback.textContent = base + teacherExtra;
-      };
-      opts.appendChild(b);
+      btns.set(key, b);
+      optsEl.appendChild(b);
     });
+
+    function lockAndMark(chosenKey) {
+      if (locked) return;
+      locked = true;
+
+      // alle erstmal neutralisieren
+      for (const [key, b] of btns.entries()) {
+        b.classList.add("is-disabled");
+        b.classList.add("is-neutral");
+      }
+
+      // richtige Antwort hervorheben
+      const correctBtn = btns.get(correctKey);
+      if (correctBtn) {
+        correctBtn.classList.remove("is-neutral");
+        correctBtn.classList.add("is-correct");
+      }
+
+      // wenn falsch gewählt: gewählte Taste rot
+      if (chosenKey && chosenKey !== correctKey) {
+        const chosenBtn = btns.get(chosenKey);
+        if (chosenBtn) {
+          chosenBtn.classList.remove("is-neutral");
+          chosenBtn.classList.add("is-wrong");
+        }
+      }
+
+      const correct = chosenKey === correctKey;
+      const base = correct ? "✅ Richtig!" : "❌ Nicht ganz.";
+
+      const expl = (t.explain || "").trim();
+      const teacherExtra = isTeacher()
+        ? ` Richtig: ${escapeHTML(correctKey || "")}.${expl ? " " + expl : ""}`
+        : "";
+
+      feedback.textContent = base + teacherExtra;
+    }
+
+    // Klick-Handler setzen
+    for (const [key, b] of btns.entries()) {
+      b.onclick = () => lockAndMark(key);
+    }
 
     node.querySelector("#prev").onclick = () => {
       i = (i - 1 + tasks.length) % tasks.length;
