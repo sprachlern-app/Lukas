@@ -6,19 +6,19 @@ export function isTeacher() {
   return localStorage.getItem(KEY) === "1";
 }
 
-export function setTeacher(on) {
-  localStorage.setItem(KEY, on ? "1" : "0");
-}
-
 export function toggleTeacherWithPrompt() {
   if (isTeacher()) {
     setTeacher(false);
+    window.dispatchEvent(new Event("teacher-mode-changed"));
     return { ok: true, teacher: false };
   }
   const code = prompt("Lehrkraft-Code eingeben:");
   if ((code || "").trim() === PASSCODE) {
     setTeacher(true);
+    window.dispatchEvent(new Event("teacher-mode-changed"));
     return { ok: true, teacher: true };
   }
+  window.dispatchEvent(new Event("teacher-mode-changed"));
   return { ok: false, teacher: false };
 }
+
