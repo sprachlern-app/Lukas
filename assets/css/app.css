@@ -165,7 +165,7 @@ button{
 /* ===== Farbige Antwortbuttons ===== */
 
 .opt:nth-child(1){
-  background: rgba(59,130,246,.25);
+  background: rgba(59,130,246,.14);
   border-color: rgba(59,130,246,.55);
 }
 
@@ -231,3 +231,27 @@ button{
 .opt.is-correct{ background: rgba(34,197,94,.35) !important; border-color: rgba(34,197,94,.75) !important; }
 .opt.is-wrong{ background: rgba(244,63,94,.28) !important; border-color: rgba(244,63,94,.75) !important; }
 .opt.is-neutral{ opacity: .45 !important; }
+
+/* ===== KRÄFTIGE Markierung (überschreibt alles davor) ===== */
+
+.opt.is-disabled{
+  opacity: 1 !important;          /* kein Abblenden */
+  filter: none !important;         /* kein Graufilter */
+}
+
+.opt.is-neutral{
+  opacity: .55 !important;         /* andere Optionen ruhig, aber noch gut sichtbar */
+  filter: none !important;
+}
+
+.opt.is-correct{
+  background: rgba(34,197,94,.70) !important;
+  border-color: rgba(34,197,94,1) !important;
+  box-shadow: 0 0 0 4px rgba(34,197,94,.35) !important;
+}
+
+.opt.is-wrong{
+  background: rgba(244,63,94,.65) !important;
+  border-color: rgba(244,63,94,1) !important;
+  box-shadow: 0 0 0 4px rgba(244,63,94,.30) !important;
+}
