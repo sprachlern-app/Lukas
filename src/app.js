@@ -3,7 +3,7 @@ import { loadCSV } from "./csv.js";
 import { setView, el } from "./render.js";
 import { runVocab } from "./practice_vocab.js";
 import { runGrammar } from "./practice_grammar.js";
-import { isTeacher, toggleTeacherWithPrompt } from "./state.js";
+import { isTeacher, teacherLogin, teacherLogout } from "./state.js";
 
 const DATA_BASE = "./data/";
 
@@ -42,7 +42,7 @@ function wireTeacherButton() {
 
   paint();
   btn.onclick = () => {
-    const res = toggleTeacherWithPrompt();
+    const res = isteacher()? teacherLogout():teacherLogin();
     paint();
     if (!res.ok) alert("Code falsch.");
   };
