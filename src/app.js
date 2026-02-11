@@ -3,7 +3,7 @@ import { loadCSV } from "./csv.js";
 import { setView, el } from "./render.js";
 import { runVocab } from "./practice_vocab.js";
 import { runGrammar } from "./practice_grammar.js";
-import { isTeacher, teacherLogin, teacherLogout } from "./state.js";
+import { isTeacher, teacherLogin, teacherLogout, resetTeacherHard } from "./state.js";
 
 const DATA_BASE = "./data/";
 
@@ -40,9 +40,30 @@ function wireTeacherButton() {
     btn.textContent = on ? "✅ Lehrkraft" : "🔒 Lehrkraft";
   };
 
+  // Extra: URL-Reset (einmalig)
+  const params = new URLSearchParams(location.search);
+  if (params.get("resetTeacher") === "1") {
+    resetTeacherHard();
+    // Hinweis im UI
+    alert("Lehrmodus wurde zurückgesetzt.");
+  }
+
   paint();
-  btn.onclick = () => {
-    const res = isteacher()? teacherLogout() : teacherLogin();
+
+  // Wenn Modus wechselt, Button neu zeichnen
+  window.addEventListener("teacher-mode-changed", paint);
+
+  btn.onclick = (ev) => {
+    // NOT-AUS: Shift + Klick => sofort raus + Speicher löschen
+    if (ev.shiftKey) {
+      resetTeacherHard();
+      teacherLogout();
+      paint();
+      alert("Lehrmodus AUS (Not-Aus).");
+      return;
+    }
+
+    const res = isTeacher() ? teacherLogout() : teacherLogin();
     paint();
     if (!res.ok) alert("Code falsch.");
   };
