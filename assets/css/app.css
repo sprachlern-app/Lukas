@@ -227,3 +227,7 @@ button{
 .opt.is-neutral{
   opacity: .45;
 }
+
+.opt.is-correct{ background: rgba(34,197,94,.35) !important; border-color: rgba(34,197,94,.75) !important; }
+.opt.is-wrong{ background: rgba(244,63,94,.28) !important; border-color: rgba(244,63,94,.75) !important; }
+.opt.is-neutral{ opacity: .45 !important; }
