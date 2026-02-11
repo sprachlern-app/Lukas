@@ -28,10 +28,11 @@ export function runGrammar(rows, title = "Grammatik") {
     ].filter(([, val]) => (val ?? "").trim() && val !== "-");
 
     let locked = false;
+    let reveal = false; // Lehrkraft-Lösung sichtbar?
 
     const node = el(`
       <div class="card">
-        <h2>⭐ ${escapeHTML(title)}</h2>
+        <h2>${escapeHTML(title)}</h2>
 
         <div class="progress">
           <div class="progress-bar" style="width:${((i + 1) / tasks.length) * 100}%"></div>
@@ -41,6 +42,10 @@ export function runGrammar(rows, title = "Grammatik") {
 
         <div class="stack" id="opts"></div>
         <div id="feedback" class="muted"></div>
+
+        <div class="row" id="teacherRow" style="display:none">
+          <button id="revealBtn">Lösung anzeigen</button>
+        </div>
 
         <div class="row">
           <button id="prev">←</button>
@@ -54,6 +59,18 @@ export function runGrammar(rows, title = "Grammatik") {
     const optsEl = node.querySelector("#opts");
     const feedback = node.querySelector("#feedback");
 
+    const teacherRow = node.querySelector("#teacherRow");
+    const revealBtn = node.querySelector("#revealBtn");
+
+    // Lehrkraft-Button nur im Lehrermodus anzeigen
+    if (isTeacher()) {
+      teacherRow.style.display = "flex";
+      revealBtn.onclick = () => {
+        reveal = true;
+        applyReveal();
+      };
+    }
+
     // Buttons erzeugen + merken
     const btns = new Map(); // key -> button
     options.forEach(([key, val]) => {
@@ -66,20 +83,20 @@ export function runGrammar(rows, title = "Grammatik") {
       if (locked) return;
       locked = true;
 
-      // alle erstmal neutralisieren
-      for (const [key, b] of btns.entries()) {
+      // alle deaktivieren + neutral
+      for (const b of btns.values()) {
         b.classList.add("is-disabled");
         b.classList.add("is-neutral");
       }
 
-      // richtige Antwort hervorheben
+      // richtige Antwort grün
       const correctBtn = btns.get(correctKey);
       if (correctBtn) {
         correctBtn.classList.remove("is-neutral");
         correctBtn.classList.add("is-correct");
       }
 
-      // wenn falsch gewählt: gewählte Taste rot
+      // falls falsch gewählt: gewählte rot
       if (chosenKey && chosenKey !== correctKey) {
         const chosenBtn = btns.get(chosenKey);
         if (chosenBtn) {
@@ -89,14 +106,22 @@ export function runGrammar(rows, title = "Grammatik") {
       }
 
       const correct = chosenKey === correctKey;
-      const base = correct ? "✅ Richtig!" : "❌ Nicht ganz.";
+      feedback.textContent = correct ? "✅ Richtig!" : "❌ Nicht ganz.";
+
+      // Lehrkraft sieht Erklärung NICHT automatisch (Variante B)
+      // -> nur nach Klick auf "Lösung anzeigen"
+    }
+
+    function applyReveal() {
+      if (!isTeacher()) return;
+      if (!reveal) return;
 
       const expl = (t.explain || "").trim();
-      const teacherExtra = isTeacher()
-        ? ` Richtig: ${escapeHTML(correctKey || "")}.${expl ? " " + expl : ""}`
-        : "";
-
-      feedback.textContent = base + teacherExtra;
+      const line1 = correctKey ? `Richtig: ${correctKey}.` : "";
+      const line2 = expl ? ` ${expl}` : "";
+      feedback.textContent = (feedback.textContent || "").trim() + (line1 || line2 ? `  ${line1}${line2}` : "");
+      revealBtn.disabled = true;
+      revealBtn.textContent = "Lösung angezeigt";
     }
 
     // Klick-Handler setzen
