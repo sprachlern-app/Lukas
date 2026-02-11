@@ -284,10 +284,10 @@ button{
 
 /* ===== Flashcards (Vokabel-Karten) ===== */
 .flashcard{
-  border-radius: 22px;
-  padding: 18px;
-  border: 1px solid rgba(255,255,255,.18);
-  box-shadow: 0 18px 40px rgba(0,0,0,.25);
+  .flashcard{
+  background: #d6eaff;
+  border: 2px solid #b8dbff;
+  box-shadow: 0 14px 36px rgba(0,0,0,.18);
 }
 
 .flashcard.c1{ background: rgba(59,130,246,.22); }
@@ -334,4 +334,56 @@ button{
   font-weight: 900;
   background: rgba(0,0,0,.18);
   border: 1px solid rgba(255,255,255,.22);
+}
+
+/* ===== NEUES GRUNDDESIGN ===== */
+
+body{
+  background: #e8f3ff;   /* helles sympathisches Blau */
+  color: #111;           /* Standard-Schrift schwarz */
+}
+
+/* alle Texte schwarz */
+body, p, h1, h2, h3, .muted, .opt, button, input {
+  color: #111 !important;
+}
+
+/* ===== FRAGENBEREICH GROSS ===== */
+
+.card{
+  max-width: 1200px;     /* vorher ca. 700 */
+  width: 92vw;
+  min-height: 72vh;      /* füllt Bildschirm */
+  margin: 20px auto;
+  padding: 28px;
+  border-radius: 24px;
+}
+
+/* Frage selbst */
+.big{
+  font-size: 3.2rem !important;
+  line-height: 1.25;
+  margin: 24px 0;
+}
+
+/* Buttons größer */
+button{
+  font-size: 1.2rem;
+  padding: 16px 22px;
+}
+
+/* Multiple Choice Optionen */
+.opt{
+  font-size: 1.3rem;
+  padding: 18px 20px;
+}
+
+/* Schreiben-Feld */
+input{
+  font-size: 1.3rem;
+  padding: 16px 18px;
+}
+header{
+  background: #cfe6ff;
+  border-bottom: 1px solid #b6d8ff;
 }
