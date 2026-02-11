@@ -28,11 +28,14 @@ export function runGrammar(rows, title = "Grammatik") {
 
     const node = el(`
       <div class="card">
+
         <h2>${escapeHTML(title)}</h2>
+
         <div class="progress">
-          <div class="progress-bar" style="${((i+1)/tasks.length)*100}%><div>
+          <div class="progress-bar" style="width:${((i+1)/tasks.length)*100}%"></div>
         </div>
-        <div class="big">${escapeHTML(item.lemma || "")}</div>
+
+        <div class="big">${escapeHTML(t.prompt || "")}</div>
 
         <div class="stack" id="opts"></div>
         <div id="feedback" class="muted"></div>
@@ -53,9 +56,9 @@ export function runGrammar(rows, title = "Grammatik") {
       const b = el(`<button class="opt">${key}: ${escapeHTML(val)}</button>`);
       b.onclick = () => {
         const correct = (t.answer || "").toUpperCase().trim() === key;
-        const base = correct ? "✅ Richtig!" : `❌ Nicht ganz.`;
 
-        // Schüler: nur Feedback; Lehrkraft: zusätzlich Erklärung + richtige Lösung
+        const base = correct ? "✅ Richtig!" : "❌ Nicht ganz.";
+
         const expl = (t.explain || "").trim();
         const teacherExtra = isTeacher()
           ? ` Richtig: ${escapeHTML(t.answer || "")}.${expl ? " " + expl : ""}`
@@ -70,6 +73,7 @@ export function runGrammar(rows, title = "Grammatik") {
       i = (i - 1 + tasks.length) % tasks.length;
       render();
     };
+
     node.querySelector("#next").onclick = () => {
       i = (i + 1) % tasks.length;
       render();
