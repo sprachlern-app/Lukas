@@ -12,8 +12,8 @@ button, .opt, input, select, textarea, .muted{
 /* Fragenbereich füllt Bildschirm */
 .card{
   background: #fffaf0 !important;
-  min-height: 76vh !important;
-  width: 80vw !important;
+  min-height: 72vh !important;
+  width: 76vw !important;
   max-width: 1400px !important;
   padding: 34px !important;
   margin: 14px auto !important;
