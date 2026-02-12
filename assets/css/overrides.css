@@ -1,0 +1,46 @@
+/* ========= FINAL OVERRIDES (immer zuletzt geladen) ========= */
+
+html, body, #app, main, #view{
+  background: #e7f3ff !important; /* hellblau */
+}
+
+body, h1, h2, h3, p, span, label, small,
+button, .opt, input, select, textarea, .muted{
+  color: #111 !important; /* schwarz */
+}
+
+/* Fragenbereich füllt Bildschirm */
+.card{
+  background: #fff !important;
+  min-height: 85vh !important;
+  width: 96vw !important;
+  max-width: 1400px !important;
+  padding: 34px !important;
+  margin: 14px auto !important;
+}
+
+/* Frage groß */
+.big{
+  font-size: clamp(3rem, 6vw, 5rem) !important;
+  line-height: 1.1 !important;
+  font-weight: 900 !important;
+}
+
+/* Antwortbuttons + Text deutlich größer */
+.opt{
+  font-size: clamp(1.6rem, 3.2vw, 2.4rem) !important;
+  padding: 22px 24px !important;
+  border-radius: 22px !important;
+}
+
+/* normale Buttons größer (Prev/Next etc.) */
+button{
+  font-size: clamp(1.2rem, 2.6vw, 1.8rem) !important;
+  padding: 18px 22px !important;
+}
+
+/* Eingabefeld groß */
+input, select{
+  font-size: clamp(1.4rem, 3vw, 2rem) !important;
+  padding: 18px 20px !important;
+}
