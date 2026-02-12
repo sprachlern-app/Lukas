@@ -23,7 +23,7 @@ button, .opt, input, select, textarea, .muted{
 .big{
   font-size: clamp(3rem, 6vw, 5rem) !important;
   line-height: 1.1 !important;
-  font-weight: 1000 !important;
+  font-weight: 900 !important;
 }
 
 /* Antwortbuttons + Text deutlich größer */
@@ -42,7 +42,7 @@ button{
 /* Eingabefeld groß */
 input, select{
   font-size: clamp(1.4rem, 3vw, 2rem) !important;
-  padding: 18px 20px !important;
+  padding: 18px 30px !important;
 }
 
 /* Header schmaler machen */
