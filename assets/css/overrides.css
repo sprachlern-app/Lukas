@@ -23,7 +23,7 @@ button, .opt, input, select, textarea, .muted{
 .big{
   font-size: clamp(3rem, 6vw, 5rem) !important;
   line-height: 1.1 !important;
-  font-weight: 500 !important;
+  font-weight: 400 !important;
 }
 
 /* Antwortbuttons + Text deutlich größer */
