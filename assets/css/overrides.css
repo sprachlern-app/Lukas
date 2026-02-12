@@ -6,7 +6,7 @@ html, body, #app, main, #view{
 
 body, h1, h2, h3, p, span, label, small,
 button, .opt, input, select, textarea, .muted{
-  color: #0008b !important; /* schwarz */
+  color: #111 !important; /* schwarz */
 }
 
 /* Fragenbereich füllt Bildschirm */
