@@ -29,7 +29,7 @@ button, .opt, input, select, textarea, .muted{
 /* Antwortbuttons + Text deutlich größer */
 .opt{
   font-size: clamp(2.2rem, 4.2vw, 3rem) !important;
-  padding: 20px 24px !important;
+  padding: 16px 20px !important;
   border-radius: 22px !important;
 }
 
