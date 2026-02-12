@@ -1,7 +1,7 @@
 /* ========= FINAL OVERRIDES (immer zuletzt geladen) ========= */
 
 html, body, #app, main, #view{
-  background: #4682b4 !important; /* hellblau */
+  background: #b0c4de !important; /* hellblau */
 }
 
 body, h1, h2, h3, p, span, label, small,
@@ -11,7 +11,7 @@ button, .opt, input, select, textarea, .muted{
 
 /* Fragenbereich füllt Bildschirm */
 .card{
-  background: #ffff00 !important;
+  background: #e0ffff !important;
   min-height: 90vh !important;
   width: 94vw !important;
   max-width: 1400px !important;
