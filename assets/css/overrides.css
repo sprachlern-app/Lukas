@@ -28,8 +28,8 @@ button, .opt, input, select, textarea, .muted{
 
 /* Antwortbuttons + Text deutlich größer */
 .opt{
-  font-size: clamp(1.6rem, 3.2vw, 2.4rem) !important;
-  padding: 22px 24px !important;
+  font-size: clamp(2.2rem, 4.2vw, 3rem) !important;
+  padding: 26px 28px !important;
   border-radius: 22px !important;
 }
 
