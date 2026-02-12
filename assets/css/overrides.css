@@ -23,7 +23,7 @@ button, .opt, input, select, textarea, .muted{
 .big{
   font-size: clamp(3rem, 6vw, 5rem) !important;
   line-height: 1.1 !important;
-  font-weight: 900 !important;
+  font-weight: 200 !important;
 }
 
 /* Antwortbuttons + Text deutlich größer */
@@ -47,7 +47,7 @@ input, select{
 
 /* Header schmaler machen */
 .topbar{
-  padding: 8px 24px !important;
+  padding: 8px 16px !important;
 }
 
 .topbar h1{
