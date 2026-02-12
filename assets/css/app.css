@@ -517,16 +517,42 @@ h1, h2, h3, p, span, label, small,
 button, .opt, input, select, textarea, .muted{
   color: #111111 !important;
 }
+/* ========= FINAL: Hellblau + Schwarz + großer Fragenbereich ========= */
 
-/* ========= BEAMER-MODUS: Fragenbereich sehr groß ========= */
+/* Overlays / Hintergründe deaktivieren (falls vorhanden) */
+html, body, #app, main, #view, .card, .flashcard, header, .topbar{
+  background-image: none !important;
+  filter: none !important;
+}
+
+/* Globaler Hintergrund */
+html, body, #app, main, #view{
+  background-color: #e7f3ff !important; /* sympathisches hellblau */
+}
+
+/* Karten hell und groß */
 .card{
+  background-color: #ffffff !important;
+  backdrop-filter: none !important;
+
   width: 96vw !important;
   max-width: 1400px !important;
   min-height: 82vh !important;
   padding: 34px !important;
   margin: 14px auto !important;
+
+  border: 1px solid rgba(0,0,0,.12) !important;
+  box-shadow: 0 18px 40px rgba(0,0,0,.12) !important;
 }
 
+/* Schrift überall schwarz */
+html, body, #app, main, #view,
+h1,h2,h3,p,span,label,small,
+button,.opt,input,select,textarea,.muted{
+  color: #111111 !important;
+}
+
+/* Frage sehr groß */
 .big{
   font-size: clamp(2.6rem, 5vw, 4.6rem) !important;
   line-height: 1.12 !important;
@@ -534,12 +560,44 @@ button, .opt, input, select, textarea, .muted{
   margin: 26px 0 !important;
 }
 
+/* Optionen/Buttons groß */
 .opt{
   font-size: 1.7rem !important;
   padding: 20px 22px !important;
+  border-radius: 20px !important;
+  background: #f2f8ff !important;
+  border: 2px solid rgba(0,0,0,.10) !important;
 }
 
 button{
   font-size: 1.25rem !important;
   padding: 16px 22px !important;
+  background: #ffffff !important;
+  border: 2px solid rgba(0,0,0,.14) !important;
 }
+
+/* Schreiben */
+input, select{
+  background: #ffffff !important;
+  border: 2px solid rgba(0,0,0,.14) !important;
+}
+
+/* Richtig/Falsch hell, gut sichtbar */
+.opt.is-correct{
+  background: #baf7c8 !important;
+  border-color: #42c55a !important;
+  color: #111 !important;
+}
+.opt.is-wrong{
+  background: #ffb8c1 !important;
+  border-color: #ef4444 !important;
+  color: #111 !important;
+}
+
+/* Flashcards freundlich (hellblau) */
+.flashcard{
+  background: #d7ecff !important;
+  border: 2px solid #b7ddff !important;
+  box-shadow: 0 18px 40px rgba(0,0,0,.10) !important;
+}
+
