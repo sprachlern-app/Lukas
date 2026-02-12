@@ -485,3 +485,6 @@ input, select{
 }
 body{ background: red !important; }
   
+html, body, #app, main, #view {
+  background: red !important;
+}
