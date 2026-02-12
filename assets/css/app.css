@@ -483,8 +483,37 @@ input, select{
   box-shadow: 0 18px 40px rgba(0,0,0,.10) !important;
   transform: none !important;
 }
-body{ background: red !important; }
-  
-html, body, #app, main, #view {
-  background: red !important;
+/* ========= HELLBLAU + SCHWARZ (hart durchgesetzt) ========= */
+
+/* mögliche Hintergrund-Bilder/Gradienten ausschalten */
+html, body, #app, main, #view, .card, .flashcard, .topbar{
+  background-image: none !important;
+  filter: none !important;
+}
+
+/* falls ein Overlay/Pseudo-Element den Hintergrund macht: aus */
+#app::before, #app::after,
+main::before, main::after,
+#view::before, #view::after,
+body::before, body::after{
+  content: none !important;
+  display: none !important;
+}
+
+/* jetzt Hintergrund wirklich setzen */
+html, body, #app, main, #view{
+  background-color: #e7f3ff !important;  /* hellblau */
+}
+
+/* Karten hell, damit der Text klar bleibt */
+.card{
+  background-color: #ffffff !important;
+  backdrop-filter: none !important;
+}
+
+/* ALLE Texte schwarz */
+html, body, #app, main, #view,
+h1, h2, h3, p, span, label, small,
+button, .opt, input, select, textarea, .muted{
+  color: #111111 !important;
 }
