@@ -14,7 +14,7 @@ button, .opt, input, select, textarea, .muted{
   background: #e9ecf0 !important;
   min-height: 60vh !important;
   width: 64vw !important;
-  max-width: 1400px !important;
+  max-width: 1200px !important;
   padding: 34px !important;
   margin: 14px auto !important;
 }
