@@ -300,7 +300,10 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
         <div class="muted">${i + 1} / ${items.length}</div>
       </div>
     `);
-
+    
+      node.querySelector("#speakQ")?.addEventListener("click", () => {
+      speakDE(p.question, 0);
+    });
     wireControls(node, renderMCQ);
 
     const opts = node.querySelector("#opts");
@@ -372,96 +375,100 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
     setView(node);
   }
 
-  // ---------- WRITE ----------
-  function renderWrite() {
-    if (!items.length) {
-      setView(el(`<p class="muted">Keine Vokabeln im gewählten Set.</p>`));
-      return;
-    }
-
-    const item = items[i];
-    const p = makePrompt(item);
-    const { main: correctMain, extra: correctExtra } = splitMainExtra(p.answerRaw);
-
-    const node = el(`
-      <div class="card">
-        <h2>${escapeHTML(title)}</h2>
-        ${controlBarHTML()}
-        ${progressBar(items.length, i)}
-
-      node.querySelector("#speakQ")?.addEventListener("click", () => {
-      speakDE(p.question, 0);
-      });
-
-        <div class="big">${escapeHTML(p.question)}</div>
-        <div class="row">
-          <button id="speakQ" type="button">🔊 Vorlesen</button>
-        </div>
-
-        <div class="row">
-          <input id="inp" type="text"
-            style="flex:1; font-size:1.2rem; padding:14px 16px; border-radius:16px;
-                   border:1px solid rgba(0,0,0,.14); background:#fff; color:#111;"
-            placeholder="Schreibe die Lösung…" />
-          <button id="check">Prüfen</button>
-        </div>
-
-        <div id="feedback" class="muted"></div>
-
-        <div class="row" id="teacherRow" style="display:none">
-          <button id="revealBtn">Lösung anzeigen</button>
-        </div>
-
-        <div class="row">
-          <button id="prev">←</button>
-          <button id="next">→</button>
-        </div>
-
-        <div class="muted">${i + 1} / ${items.length}</div>
-      </div>
-    `);
-
-    wireControls(node, renderWrite);
-
-    const inp = node.querySelector("#inp");
-    const feedback = node.querySelector("#feedback");
-
-    const teacherRow = node.querySelector("#teacherRow");
-    const revealBtn = node.querySelector("#revealBtn");
-    if (isTeacher()) {
-      teacherRow.style.display = "flex";
-      revealBtn.onclick = () => {
-        feedback.textContent = `✅ Lösung: ${correctMain}` + (correctExtra ? `  (Zusatz: ${correctExtra})` : "");
-        revealBtn.disabled = true;
-        revealBtn.textContent = "Lösung angezeigt";
-      };
-    }
-
-    function check() {
-      const guess = norm(inp.value);
-      if (guess && guess === norm(correctMain)) {
-        feedback.textContent = "✅ Richtig!";
-      } else {
-        feedback.textContent = "❌ Nicht ganz.";
-      }
-    }
-
-    node.querySelector("#check").onclick = check;
-    inp.addEventListener("keydown", (e) => e.key === "Enter" && check());
-
-    node.querySelector("#prev").onclick = () => {
-      i = (i - 1 + items.length) % items.length;
-      renderWrite();
-    };
-
-    node.querySelector("#next").onclick = () => {
-      i = (i + 1) % items.length;
-      renderWrite();
-    };
-
-    setView(node);
-    inp.focus();
+ // ---------- WRITE ----------
+function renderWrite() {
+  if (!items.length) {
+    setView(el(`<p class="muted">Keine Vokabeln im gewählten Set.</p>`));
+    return;
   }
+
+  const item = items[i];
+  const p = makePrompt(item);
+  const { main: correctMain, extra: correctExtra } = splitMainExtra(p.answerRaw);
+
+  const node = el(`
+    <div class="card">
+      <h2>${escapeHTML(title)}</h2>
+      ${controlBarHTML()}
+      ${progressBar(items.length, i)}
+
+      <div class="big">${escapeHTML(p.question)}</div>
+      <div class="row">
+        <button id="speakQ" type="button">🔊 Vorlesen</button>
+      </div>
+
+      <div class="row">
+        <input id="inp" type="text"
+          style="flex:1; font-size:1.2rem; padding:14px 16px; border-radius:16px;
+                 border:1px solid rgba(0,0,0,.14); background:#fff; color:#111;"
+          placeholder="Schreibe die Lösung…" />
+        <button id="check">Prüfen</button>
+      </div>
+
+      <div id="feedback" class="muted"></div>
+
+      <div class="row" id="teacherRow" style="display:none">
+        <button id="revealBtn">Lösung anzeigen</button>
+      </div>
+
+      <div class="row">
+        <button id="prev">←</button>
+        <button id="next">→</button>
+      </div>
+
+      <div class="muted">${i + 1} / ${items.length}</div>
+    </div>
+  `);
+
+  // ✅ HIER (außerhalb des Template-Strings!)
+  node.querySelector("#speakQ")?.addEventListener("click", () => {
+    speakDE(p.question, 0);
+  });
+
+  wireControls(node, renderWrite);
+
+  const inp = node.querySelector("#inp");
+  const feedback = node.querySelector("#feedback");
+
+  const teacherRow = node.querySelector("#teacherRow");
+  const revealBtn = node.querySelector("#revealBtn");
+  if (isTeacher()) {
+    teacherRow.style.display = "flex";
+    revealBtn.onclick = () => {
+      feedback.textContent =
+        `✅ Lösung: ${correctMain}` + (correctExtra ? `  (Zusatz: ${correctExtra})` : "");
+      revealBtn.disabled = true;
+      revealBtn.textContent = "Lösung angezeigt";
+    };
+  }
+
+  function check() {
+    const guess = norm(inp.value);
+    if (guess && guess === norm(correctMain)) {
+      feedback.textContent = "✅ Richtig!";
+    } else {
+      feedback.textContent = "❌ Nicht ganz.";
+    }
+  }
+
+  node.querySelector("#check").onclick = check;
+  inp.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") check();
+  });
+
+  node.querySelector("#prev").onclick = () => {
+    i = (i - 1 + items.length) % items.length;
+    renderWrite();
+  };
+
+  node.querySelector("#next").onclick = () => {
+    i = (i + 1) % items.length;
+    renderWrite();
+  };
+
+  setView(node);
+  inp.focus();
+}
 
   // ---------- Router ----------
   if (mode === "mcq") return renderMCQ();
