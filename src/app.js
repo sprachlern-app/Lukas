@@ -19,6 +19,15 @@ window.addEventListener("unhandledrejection", (e) => {
 });
 
 const DATA_BASE = "./data/";
+window.addEventListener("error", (e) => {
+  const view = document.getElementById("view");
+  if (view) view.innerHTML = `<pre class="card">JS-Fehler:\n${e.message}\n${e.filename}:${e.lineno}</pre>`;
+});
+
+window.addEventListener("unhandledrejection", (e) => {
+  const view = document.getElementById("view");
+  if (view) view.innerHTML = `<pre class="card">Promise-Fehler:\n${e.reason || e}</pre>`;
+});
 
 async function boot() {
   wireTeacherButton();
