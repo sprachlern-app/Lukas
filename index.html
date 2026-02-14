@@ -33,7 +33,34 @@
     </script>
 
     <!-- App-Start (Cache-Buster ist sinnvoll) -->
-    <script type="module" src="src/app.js?v=901"></script>
+  <script>
+  // Zeigt JS-Fehler direkt im Bereich #view an (ohne DevTools)
+  window.addEventListener("error", (e) => {
+    const view = document.getElementById("view");
+    if (!view) return;
+    const msg = [
+      "JS-Fehler:",
+      e.message || "(keine message)",
+      e.filename ? `Datei: ${e.filename}` : "",
+      e.lineno ? `Zeile: ${e.lineno}` : "",
+      e.colno ? `Spalte: ${e.colno}` : ""
+    ].filter(Boolean).join("\n");
+    view.innerHTML = `<pre class="card" style="white-space:pre-wrap">${msg}</pre>`;
+  });
+
+  window.addEventListener("unhandledrejection", (e) => {
+    const view = document.getElementById("view");
+    if (!view) return;
+    view.innerHTML = `<pre class="card" style="white-space:pre-wrap">Promise-Fehler:\n${String(e.reason || e)}</pre>`;
+  });
+
+  // Mini-Hinweis, dass dieser Block aktiv ist
+  window.addEventListener("DOMContentLoaded", () => {
+    const view = document.getElementById("view");
+    if (view) view.insertAdjacentHTML("beforeend", `<p class="muted">Debug aktiv…</p>`);
+  });
+</script>   
+    <script type="module" src="src/app.js?v=1001"></script>
   </div>
 </body>
 </html>
