@@ -282,7 +282,9 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
         ${progressBar(items.length, i)}
 
         <div class="big">${escapeHTML(p.question)}</div>
-
+        <div class="row">
+          <button id="speakQ" type="button">🔊 Vorlesen</button>
+      </div>
         <div class="stack" id="opts"></div>
         <div id="feedback" class="muted"></div>
 
@@ -387,7 +389,14 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
         ${controlBarHTML()}
         ${progressBar(items.length, i)}
 
+      node.querySelector("#speakQ")?.addEventListener("click", () => {
+      speakDE(p.question, 0);
+      });
+
         <div class="big">${escapeHTML(p.question)}</div>
+        <div class="row">
+          <button id="speakQ" type="button">🔊 Vorlesen</button>
+        </div>
 
         <div class="row">
           <input id="inp" type="text"
