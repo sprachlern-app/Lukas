@@ -4,7 +4,7 @@ import { setView, el } from "./render.js";
 import { runVocab } from "./practice_vocab.js";
 import { runGrammar } from "./practice_grammar.js";
 import { isTeacher, teacherLogin, teacherLogout, resetTeacherHard } from "./state.js";
-import { initTTS } from "./tts.js";initTTS();
+import { initTTS } from "./tts.js";
 
 initTTS();    //Startet Vorlese-Stimmen beim Lden der App
 
