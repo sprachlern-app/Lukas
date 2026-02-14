@@ -4,6 +4,8 @@ import { setView, el } from "./render.js";
 import { runVocab } from "./practice_vocab.js";
 import { runGrammar } from "./practice_grammar.js";
 import { isTeacher, teacherLogin, teacherLogout, resetTeacherHard } from "./state.js";
+import { initTTS } from "./tts.js";initTTS();
+
 
 const DATA_BASE = "./data/";
 
