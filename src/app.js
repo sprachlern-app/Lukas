@@ -8,6 +8,16 @@ import { initTTS } from "./tts.js";
 
 initTTS();    //Startet Vorlese-Stimmen beim Lden der App
 
+// ===== Debug: Fehler im Bildschirm anzeigen =====
+window.addEventListener("error", (e) => {
+  const view = document.getElementById("view");
+  if (view) view.innerHTML = `<pre class="card">JS-Fehler:\n${e.message}\n${e.filename}:${e.lineno}</pre>`;
+});
+window.addEventListener("unhandledrejection", (e) => {
+  const view = document.getElementById("view");
+  if (view) view.innerHTML = `<pre class="card">Promise-Fehler:\n${String(e.reason || "")}</pre>`;
+});
+
 const DATA_BASE = "./data/";
 
 async function boot() {
