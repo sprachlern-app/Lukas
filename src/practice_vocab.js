@@ -9,8 +9,9 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
     return;
   }
 
-  // Helpers
+  // ---------- Helpers ----------
   const shuffle = (arr) => arr.slice().sort(() => Math.random() - 0.5);
+
   const norm = (s) =>
     String(s || "")
       .trim()
@@ -18,6 +19,13 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
       .replace(/\s+/g, " ")
       .replace(/[“”„"]/g, '"');
 
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, (m) => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]
+    ));
+  }
+
+  // trennt "pen / zum Schreiben" -> { main:"pen", extra:"zum Schreiben" }
   function splitMainExtra(s) {
     const raw = String(s || "").trim();
     const parts = raw.split(" / ");
@@ -25,12 +33,6 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
       main: (parts[0] || "").trim(),
       extra: parts.slice(1).join(" / ").trim(),
     };
-  }
-
-  function escapeHTML(s) {
-    return String(s).replace(/[&<>"']/g, (m) => (
-      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]
-    ));
   }
 
   function progressBar(total, idx) {
@@ -45,34 +47,32 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
     return ["c1", "c2", "c3", "c4"][idx % 4];
   }
 
-  // ===== Set-Auswahl vorbereiten =====
+  // ---------- Set-Auswahl ----------
   const sets = [
     ...new Set(allItems.map((x) => String(x.set_id || "").trim()).filter(Boolean)),
   ].sort((a, b) => a.localeCompare(b, "de"));
 
-  let selectedSet = sets[0] || "all"; // default: erstes Set (oder all)
+  let selectedSet = "all";
   let roundOn = false;
-  let roundSize = 10;
+  const roundSize = 10;
 
-  let items = []; // aktuell aktive Liste (Set + ggf. 10er)
+  let items = [];
   let i = 0;
 
   function getSetItems() {
-    if (!selectedSet || selectedSet === "all") return allItems.slice();
+    if (selectedSet === "all") return allItems.slice();
     return allItems.filter((x) => String(x.set_id || "").trim() === selectedSet);
   }
 
   function rebuildItems() {
     const base = getSetItems();
     const picked = roundOn ? shuffle(base).slice(0, Math.min(roundSize, base.length)) : base;
-    items = picked.length ? picked : base; // falls Set leer wäre
+    items = picked.length ? picked : base;
     i = 0;
   }
 
-  // beim Start initialisieren
   rebuildItems();
 
-  // Pools für Distraktoren (immer aus AKTUELLEM Items-Set, damit MCQ sinnvoll bleibt)
   function makePools(currentItems) {
     const lemmaPool = shuffle(
       [...new Set(currentItems.map((x) => splitMainExtra(x.lemma).main).filter(Boolean))]
@@ -83,7 +83,7 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
     return { lemmaPool, transPool };
   }
 
-  // A + C: Richtung gemischt pro Item
+  // Richtung gemischt
   function makePrompt(item) {
     const dir = Math.random() < 0.5 ? "de2x" : "x2de";
     if (dir === "de2x") {
@@ -102,12 +102,14 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
     };
   }
 
-  // ===== UI-Leiste (Set + 10er-Runde) =====
   function controlBarHTML() {
     const setOptions = [
       `<option value="all"${selectedSet === "all" ? " selected" : ""}>Alle Sets</option>`,
       ...sets.map(
-        (s) => `<option value="${escapeHTML(s)}"${selectedSet === s ? " selected" : ""}>${escapeHTML(s)}</option>`
+        (s) =>
+          `<option value="${escapeHTML(s)}"${
+            selectedSet === s ? " selected" : ""
+          }>${escapeHTML(s)}</option>`
       ),
     ].join("");
 
@@ -116,7 +118,7 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
         <label class="muted" style="font-weight:700;">Set:</label>
         <select id="setSelect"
           style="font-size:1.1rem; padding:10px 12px; border-radius:14px;
-                 border:1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: white;">
+                 border:1px solid rgba(0,0,0,.14); background:#fff; color:#111;">
           ${setOptions}
         </select>
 
@@ -153,62 +155,13 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
 
     if (reshuffleBtn) {
       reshuffleBtn.onclick = () => {
-        // nur die aktuelle Liste neu ziehen (besonders für 10er)
         rebuildItems();
         rerenderFn();
       };
     }
   }
 
-  // ===== CARDS =====
-  function renderCards() {
-    if (!items.length) {
-      setView(el(`<p class="muted">Keine Vokabeln im gewählten Set.</p>`));
-      return;
-    }
-
-    const item = items[i];
-    const p = makePrompt(item);
-    const { main: answerMain, extra: answerExtra } = splitMainExtra(p.answerRaw);
-    const teacherHint = (item.de_hint || "").trim();
-
-    let showBack = false;
-
-   const node = el(`
-  <div class="card">
-    <h2>${escapeHTML(title)}</h2>
-    ${controlBarHTML()}
-    ${progressBar(items.length, i)}
-
-    <div class="flashcard ${colorClass(i)}">
-      <div class="label">Karte</div>
-      <div class="big">${escapeHTML(p.question)}</div>
-
-      <div class="row">
-        <button id="speak1" type="button">🔊 Vorlesen</button>
-      </div>
-
-      <hr />
-
-      <div id="backArea" class="muted">Tippe auf „Umdrehen“.</div>
-    </div>
-
-    <div class="row">
-      <button id="prev">←</button>
-      <button id="flip">Umdrehen</button>
-      <button id="next">→</button>
-    </div>
-
-    <div class="muted">${i + 1} / ${items.length}</div>
-  </div>
-`);
-
-node.querySelector("#speak1")?.addEventListener("click", () => {
-  speakDE(p.question, 0);
-});
-setView(node);
-
-// ===== CARDS =====
+  // ---------- CARDS ----------
   function renderCards() {
     if (!items.length) {
       setView(el(`<p class="muted">Keine Vokabeln im gewählten Set.</p>`));
@@ -230,7 +183,9 @@ setView(node);
 
         <div class="flashcard ${colorClass(i)}">
           <div class="label">Karte</div>
+
           <div class="big">${escapeHTML(p.question)}</div>
+
           <div class="row">
             <button id="speak1" type="button">🔊 Vorlesen</button>
           </div>
@@ -246,30 +201,6 @@ setView(node);
           <button id="next">→</button>
         </div>
 
-  // 👉 HIER kommt der Klick-Handler rein
-  node.querySelector("#speak1")?.addEventListener("click", () => {
-    speakDE(p.question, 0);
-  });
-
-  // vorhandene Button-Handler
-  node.querySelector("#prev").onclick = () => {
-    i = (i - 1 + items.length) % items.length;
-    renderCards();
-  };
-
-  node.querySelector("#next").onclick = () => {
-    i = (i + 1) % items.length;
-    renderCards();
-  };
-
-  node.querySelector("#flip").onclick = () => {
-    showBack = !showBack;
-    paintBack();
-  };
-
-  setView(node);
-}
-
         <div class="muted">${i + 1} / ${items.length}</div>
       </div>
     `);
@@ -277,6 +208,7 @@ setView(node);
     wireControls(node, renderCards);
 
     const backArea = node.querySelector("#backArea");
+
     function paintBack() {
       if (!showBack) {
         backArea.className = "muted";
@@ -300,14 +232,20 @@ setView(node);
       `;
     }
 
+    node.querySelector("#speak1")?.addEventListener("click", () => {
+      speakDE(p.question, 0);
+    });
+
     node.querySelector("#prev").onclick = () => {
       i = (i - 1 + items.length) % items.length;
       renderCards();
     };
+
     node.querySelector("#next").onclick = () => {
       i = (i + 1) % items.length;
       renderCards();
     };
+
     node.querySelector("#flip").onclick = () => {
       showBack = !showBack;
       paintBack();
@@ -317,7 +255,7 @@ setView(node);
     setView(node);
   }
 
-  // ===== MCQ =====
+  // ---------- MCQ ----------
   function renderMCQ() {
     if (!items.length) {
       setView(el(`<p class="muted">Keine Vokabeln im gewählten Set.</p>`));
@@ -381,12 +319,11 @@ setView(node);
     }
 
     const keys = ["A", "B", "C", "D"];
-const btns = choices.map((text, idx) => {
-  const key = keys[idx] || "";
-  const b = el(`<button class="opt">${key}: ${escapeHTML(text)}</button>`);
-  opts.appendChild(b);
-  return b;
-});
+    const btns = choices.map((text, idx) => {
+      const b = el(`<button class="opt"><b>${keys[idx] || ""}:</b> ${escapeHTML(text)}</button>`);
+      opts.appendChild(b);
+      return b;
+    });
 
     function lockAndMark(chosenText) {
       if (locked) return;
@@ -416,12 +353,15 @@ const btns = choices.map((text, idx) => {
       }
     }
 
-    btns.forEach((b, idx) => (b.onclick = () => lockAndMark(choices[idx])));
+    btns.forEach((b, idx) => {
+      b.onclick = () => lockAndMark(choices[idx]);
+    });
 
     node.querySelector("#prev").onclick = () => {
       i = (i - 1 + items.length) % items.length;
       renderMCQ();
     };
+
     node.querySelector("#next").onclick = () => {
       i = (i + 1) % items.length;
       renderMCQ();
@@ -430,7 +370,7 @@ const btns = choices.map((text, idx) => {
     setView(node);
   }
 
-  // ===== WRITE =====
+  // ---------- WRITE ----------
   function renderWrite() {
     if (!items.length) {
       setView(el(`<p class="muted">Keine Vokabeln im gewählten Set.</p>`));
@@ -452,7 +392,7 @@ const btns = choices.map((text, idx) => {
         <div class="row">
           <input id="inp" type="text"
             style="flex:1; font-size:1.2rem; padding:14px 16px; border-radius:16px;
-                   border:1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: white;"
+                   border:1px solid rgba(0,0,0,.14); background:#fff; color:#111;"
             placeholder="Schreibe die Lösung…" />
           <button id="check">Prüfen</button>
         </div>
@@ -504,6 +444,7 @@ const btns = choices.map((text, idx) => {
       i = (i - 1 + items.length) % items.length;
       renderWrite();
     };
+
     node.querySelector("#next").onclick = () => {
       i = (i + 1) % items.length;
       renderWrite();
@@ -513,13 +454,8 @@ const btns = choices.map((text, idx) => {
     inp.focus();
   }
 
-  // Router
+  // ---------- Router ----------
   if (mode === "mcq") return renderMCQ();
   if (mode === "write") return renderWrite();
   return renderCards();
-}
-function escapeHTML(s) {
-  return String(s).replace(/[&<>"']/g, (m) => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]
-  ));
 }
