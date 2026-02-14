@@ -174,30 +174,39 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
 
     let showBack = false;
 
-    const node = el(`
-      <div class="card">
-        <h2>${escapeHTML(title)}</h2>
-        ${controlBarHTML()}
-        ${progressBar(items.length, i)}
+   const node = el(`
+  <div class="card">
+    <h2>${escapeHTML(title)}</h2>
+    ${controlBarHTML()}
+    ${progressBar(items.length, i)}
 
-        <div class="flashcard ${colorClass(i)}">
-          <div class="label">Karte</div>
-          <div class="big">${escapeHTML(p.question)}</div>
-          
-          <div class="row">
-            <button id="speak1" type="button">🔊 Vorlesen</button>
-          </div>
+    <div class="flashcard ${colorClass(i)}">
+      <div class="label">Karte</div>
+      <div class="big">${escapeHTML(p.question)}</div>
 
-          <hr />
+      <div class="row">
+        <button id="speak1" type="button">🔊 Vorlesen</button>
+      </div>
 
-          <div id="backArea" class="muted">Tippe auf „Umdrehen“.</div>
-        </div>
+      <hr />
 
-        <div class="row">
-          <button id="prev">←</button>
-          <button id="flip">Umdrehen</button>
-          <button id="next">→</button>
-        </div>
+      <div id="backArea" class="muted">Tippe auf „Umdrehen“.</div>
+    </div>
+
+    <div class="row">
+      <button id="prev">←</button>
+      <button id="flip">Umdrehen</button>
+      <button id="next">→</button>
+    </div>
+
+    <div class="muted">${i + 1} / ${items.length}</div>
+  </div>
+`);
+
+node.querySelector("#speak1")?.addEventListener("click", () => {
+  speakDE(p.question, 0);
+});
+setView(node);
 
 // ===== CARDS =====
   function renderCards() {
