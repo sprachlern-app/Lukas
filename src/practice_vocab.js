@@ -1,6 +1,7 @@
 // src/practice_vocab.js
 import { el, setView } from "./render.js";
 import { isTeacher } from "./state.js";
+import { speakDE } from "./tts.js";
 
 export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
   if (!Array.isArray(allItems) || allItems.length === 0) {
@@ -182,6 +183,10 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
         <div class="flashcard ${colorClass(i)}">
           <div class="label">Karte</div>
           <div class="big">${escapeHTML(p.question)}</div>
+          
+          <div class="row">
+            <button id="speak1" type="button">🔊 Vorlesen</button>
+          </div>
 
           <hr />
 
@@ -193,6 +198,68 @@ export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
           <button id="flip">Umdrehen</button>
           <button id="next">→</button>
         </div>
+
+// ===== CARDS =====
+  function renderCards() {
+    if (!items.length) {
+      setView(el(`<p class="muted">Keine Vokabeln im gewählten Set.</p>`));
+      return;
+    }
+
+    const item = items[i];
+    const p = makePrompt(item);
+    const { main: answerMain, extra: answerExtra } = splitMainExtra(p.answerRaw);
+    const teacherHint = (item.de_hint || "").trim();
+
+    let showBack = false;
+
+    const node = el(`
+      <div class="card">
+        <h2>${escapeHTML(title)}</h2>
+        ${controlBarHTML()}
+        ${progressBar(items.length, i)}
+
+        <div class="flashcard ${colorClass(i)}">
+          <div class="label">Karte</div>
+          <div class="big">${escapeHTML(p.question)}</div>
+          <div class="row">
+            <button id="speak1" type="button">🔊 Vorlesen</button>
+          </div>
+
+          <hr />
+
+          <div id="backArea" class="muted">Tippe auf „Umdrehen“.</div>
+        </div>
+
+        <div class="row">
+          <button id="prev">←</button>
+          <button id="flip">Umdrehen</button>
+          <button id="next">→</button>
+        </div>
+
+  // 👉 HIER kommt der Klick-Handler rein
+  node.querySelector("#speak1")?.addEventListener("click", () => {
+    speakDE(p.question, 0);
+  });
+
+  // vorhandene Button-Handler
+  node.querySelector("#prev").onclick = () => {
+    i = (i - 1 + items.length) % items.length;
+    renderCards();
+  };
+
+  node.querySelector("#next").onclick = () => {
+    i = (i + 1) % items.length;
+    renderCards();
+  };
+
+  node.querySelector("#flip").onclick = () => {
+    showBack = !showBack;
+    paintBack();
+  };
+
+  setView(node);
+}
 
         <div class="muted">${i + 1} / ${items.length}</div>
       </div>
