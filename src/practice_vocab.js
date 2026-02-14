@@ -518,3 +518,8 @@ const btns = choices.map((text, idx) => {
   if (mode === "write") return renderWrite();
   return renderCards();
 }
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, (m) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]
+  ));
+}
