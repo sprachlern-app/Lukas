@@ -2,7 +2,6 @@
 import { el, setView } from "./render.js";
 import { isTeacher } from "./state.js";
 import { speakDE } from "./tts.js";
-import { speakDE } from "./tts.js";
 
 export function runVocab(allItems, title = "Vokabeln", mode = "cards") {
   if (!Array.isArray(allItems) || allItems.length === 0) {
